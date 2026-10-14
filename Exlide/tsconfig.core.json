@@ -1,0 +1,9 @@
+{
+  "//": "Shared core must stay platform-independent: no DOM, no Node, no Tauri. This config enforces it.",
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "lib": ["ES2023"],
+    "types": []
+  },
+  "include": ["src/core"]
+}

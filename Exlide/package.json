@@ -1,0 +1,29 @@
+{
+  "name": "exlide",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Live presentation tool: speech in, AI-directed slides out.",
+  "type": "module",
+  "engines": {
+    "node": ">=22.18"
+  },
+  "scripts": {
+    "dev": "vite",
+    "typecheck": "tsc -p tsconfig.core.json && tsc -p tsconfig.json && tsc -p tsconfig.node.json",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "replay": "node scripts/replay.ts",
+    "server": "node server/proxy.ts",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "@types/node": "^24.19.2",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.4",
+    "vitest": "^5.0.4"
+  },
+  "dependencies": {
+    "reveal.js": "^6.0.2"
+  }
+}

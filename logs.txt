@@ -1,0 +1,14 @@
+[2026-10-14 18:31] [session 1] START step 0 (scaffold). Repo was empty except claude.md and an empty Exlide/ folder.
+[2026-10-14 18:31] [step 0] ENV node/npm/rust/ollama not installed; git 2.54 present.
+[2026-10-14 18:33] [step 0] INSTALLED Node.js 24.20.0 LTS via winget (user approved). npm 11.19.0.
+[2026-10-14 18:34] [step 0] DECISION layout: app lives in Exlide/ (package.json, src/, server/, fixtures/, scripts/); repo root keeps only claude.md, logs.txt, README.md, .gitignore. User asked for the main body in the Exlide folder. All npm commands run inside Exlide/.
+[2026-10-14 18:34] [step 0] DECISION git repo root = Project/ so claude.md and logs.txt are committed with the app.
+[2026-10-14 18:35] [step 0] DEP user approved @types/node (dev-only types for replay script + proxy server).
+[2026-10-14 18:35] [step 0] DECISION TS imports use explicit .ts extensions (allowImportingTsExtensions + erasableSyntaxOnly) so Node 24 runs scripts/ and server/ directly via native type stripping; no tsx/ts-node dependency needed.
+[2026-10-14 18:36] [step 0] DEPS installed (pre-approved): typescript 7.0.2, vite 8.3.4, vitest 5.0.4, reveal.js 6.0.2 (ships own types); @types/node 24.19.2 (approved).
+[2026-10-14 18:36] [step 0] CREATED tsconfig.base/core/json/node - core config has lib ES2023 only, so any DOM/Node use in src/core fails typecheck.
+[2026-10-14 18:36] [step 0] CREATED src/core/providers.ts (SttProvider, LlmProvider), src/core/debug.ts (switchable app debug logger, injected sink), adapters/{llm,stt}/mock.ts.
+[2026-10-14 18:36] [step 0] DECISION client env: vite.config.ts injects only whitelisted non-secret vars (__EXLIDE_ENV__); keys stay server-side.
+[2026-10-14 18:37] [step 0] CREATED src/config.ts, index.html, src/main.ts (UI shell: mic, steer input, stage), .env.example, .gitignore, tests/config.test.ts
+[2026-10-14 18:37] [step 0] VERIFIED typecheck OK (3 configs), 3 tests pass, vite build OK.
+[2026-10-14 18:38] [step 0] CREATED README.md (repo root).

@@ -1,0 +1,9 @@
+{
+  "//": "Node-side code: tests, replay script, proxy server, tool configs.",
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "lib": ["ES2023"],
+    "types": ["node"]
+  },
+  "include": ["tests", "scripts", "server", "vite.config.ts"]
+}
