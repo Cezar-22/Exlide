@@ -169,7 +169,7 @@ export class Director {
     const steeringCount = this.pendingSteering.length;
     const transcriptVersion = transcript.version;
     try {
-      const outcome = await this.direct(steering);
+      const outcome = await this.direct(steering, this.lastTranscriptVersion);
       // Only consume what this call actually saw; notes typed meanwhile wait for the next tick.
       this.pendingSteering = this.pendingSteering.slice(steeringCount);
       this.lastTranscriptVersion = transcriptVersion;
@@ -183,14 +183,16 @@ export class Director {
     }
   }
 
-  private async direct(steering: string | null): Promise<TickOutcome> {
+  private async direct(steering: string | null, seenVersion: number): Promise<TickOutcome> {
     const { transcript, clock, logger } = this.deps;
     transcript.prune(clock());
     transcript.summary = coveredSummary(this.currentDeck);
     const deckAtCall = this.currentDeck;
+    const { earlier, latest } = transcript.splitSince(seenVersion, this.options.maxTranscriptChars);
     const userPrompt = buildDirectorUserPrompt({
       deck: deckAtCall,
-      transcript: transcript.recentText(this.options.maxTranscriptChars),
+      earlier,
+      latest,
       summary: transcript.summary,
       steering,
     });
@@ -214,7 +216,7 @@ export class Director {
     }
 
     const now = clock();
-    const stable = applyStability(changes, this.currentDeck, now, this.options.stability, steering !== null);
+    const stable = applyStability(changes, this.currentDeck, now, this.options.stability, steering);
     this.stats.heldOps += stable.held.length;
     for (const held of stable.held) logger.log('op.held', { op: held.op, reason: held.reason });
     if (stable.allowed.length === 0) return 'held';

@@ -41,4 +41,6 @@ export interface LlmProvider {
   readonly name: string;
   /** Returns the raw model text. Throws on transport errors. */
   complete(request: LlmRequest): Promise<string>;
+  /** Optional: load the model ahead of the first real call (local models take seconds to load). */
+  warmUp?(): Promise<void>;
 }

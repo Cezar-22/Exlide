@@ -52,6 +52,7 @@ export async function runReplay(
   logger: DebugLogger,
   options: ReplayOptions,
 ): Promise<ReplayReport> {
+  await llm.warmUp?.().catch(() => undefined); // keep model load time out of the latency numbers
   let now = 0;
   const transcript = new TranscriptBuffer();
   const director = new Director({

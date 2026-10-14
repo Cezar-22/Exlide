@@ -12,12 +12,15 @@ export interface StabilityOptions {
   maxAddsPerTick: number;
   /** Existing bullets an update may drop or reword at once. */
   maxBulletChurn: number;
+  /** remove_slide / reorder only when a steering note asks: the class has already seen those slides. */
+  structuralNeedsSteering: boolean;
 }
 
 export const DEFAULT_STABILITY: StabilityOptions = {
   minDwellMs: 8000,
   maxAddsPerTick: 1,
   maxBulletChurn: 1,
+  structuralNeedsSteering: true,
 };
 
 export interface HeldOperation {
@@ -41,17 +44,32 @@ function bulletChurn(before: readonly string[], after: readonly string[]): numbe
   return before.filter((b) => !kept.has(b.toLowerCase())).length;
 }
 
+// Words in a steering note that explicitly ask for a destructive change.
+const ASKS_REMOVE = /\b(remove|delete|drop|get rid|clear|erase|scrap|throw away)\b/i;
+const ASKS_REORDER = /\b(reorder|re-order|move|swap|order|before|after|first|last|put)\b/i;
+
+/** Slides the class has seen are only deleted or shuffled when the speaker literally asks. */
+function structuralAllowed(op: Operation, steering: string | null): boolean {
+  if (op.op === 'remove_slide') return steering !== null && ASKS_REMOVE.test(steering);
+  if (op.op === 'reorder') return steering !== null && ASKS_REORDER.test(steering);
+  return true;
+}
+
 export function applyStability(
   ops: readonly Operation[],
   deck: DeckState,
   now: number,
   options: StabilityOptions,
-  steering: boolean,
+  steering: string | null,
 ): StabilityResult {
   const result: StabilityResult = { allowed: [], held: [] };
   const changes = ops.filter((op) => op.op !== 'no_change');
-  if (steering) {
-    result.allowed.push(...changes);
+  const holdStructural = (op: Operation) => options.structuralNeedsSteering && !structuralAllowed(op, steering);
+  if (steering !== null) {
+    for (const op of changes) {
+      if (holdStructural(op)) result.held.push({ op, reason: `steering note did not ask for ${op.op}` });
+      else result.allowed.push(op);
+    }
     return result;
   }
 
@@ -62,6 +80,10 @@ export function applyStability(
 
   let adds = 0;
   for (const op of changes) {
+    if (holdStructural(op)) {
+      result.held.push({ op, reason: `${op.op} only on a steering note` });
+      continue;
+    }
     if (op.op === 'add_slide') {
       adds += 1;
       if (adds > options.maxAddsPerTick) {

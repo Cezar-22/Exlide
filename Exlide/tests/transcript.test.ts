@@ -56,4 +56,16 @@ describe('TranscriptBuffer', () => {
     expect(t.recentText(100)).toBe('');
     expect(t.version).toBe(2);
   });
+
+  it('splits text into what the director already saw and what is new', () => {
+    const t = new TranscriptBuffer();
+    t.add({ text: 'First idea.', isFinal: true, at: 1 });
+    const seen = t.version;
+    t.add({ text: 'Second idea.', isFinal: true, at: 2 });
+    t.add({ text: 'Third idea.', isFinal: true, at: 3 });
+    expect(t.splitSince(seen, 1000)).toEqual({ earlier: 'First idea.', latest: 'Second idea. Third idea.' });
+    expect(t.splitSince(t.version, 1000)).toEqual({ earlier: 'First idea. Second idea. Third idea.', latest: '' });
+    // New words win when the budget is tight.
+    expect(t.splitSince(seen, 24)).toEqual({ earlier: '', latest: 'Second idea. Third idea.' });
+  });
 });

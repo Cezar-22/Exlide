@@ -33,10 +33,21 @@ describe('Director', () => {
     expect(await director.tick()).toBe('changed');
     const request = llm.requests[0];
     expect(request?.jsonSchema).toBe(DIRECTOR_REPLY_SCHEMA);
-    expect(request?.user).toContain('Solar panels make DC power.');
+    expect(request?.user).toContain('NEW WORDS (since your last update): "Solar panels make DC power."');
     expect(request?.user).toContain('DECK: {"current":null,"slides":[]}');
     expect(director.deck.slides[0]?.title).toBe('Solar basics');
     expect(seen).toEqual([1]);
+  });
+
+  it('marks words the model already saw as EARLIER and only fresh speech as NEW WORDS', async () => {
+    const { director, llm, say, clock } = setup([add('A')]);
+    say('First topic.');
+    await director.tick();
+    clock.now = 9000;
+    say('Second topic.');
+    await director.tick();
+    expect(llm.requests[1]?.user).toContain('EARLIER (already handled, context only): "First topic."');
+    expect(llm.requests[1]?.user).toContain('NEW WORDS (since your last update): "Second topic."');
   });
 
   it('does not call the model again until new words arrive', async () => {

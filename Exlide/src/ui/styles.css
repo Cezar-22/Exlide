@@ -189,3 +189,35 @@ body {
   box-shadow: 0 0 0 calc(var(--level) * 10px) rgb(255 90 95 / 0.35);
   transition: box-shadow 80ms linear;
 }
+
+/* live caption above the controls */
+.caption {
+  position: absolute;
+  right: 16px;
+  bottom: 12px;
+  left: 16px;
+  z-index: 30;
+  padding: 10px 16px;
+  border-radius: 8px;
+  background: rgb(0 0 0 / 0.72);
+  color: #fff;
+  font-size: clamp(1rem, 2.2vw, 1.5rem);
+  line-height: 1.35;
+  text-align: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 250ms ease;
+}
+
+.caption.visible {
+  opacity: 1;
+}
+
+.caption .interim {
+  color: #b9bfcc;
+}
+
+.caption.hint {
+  background: rgb(120 70 0 / 0.85);
+  font-size: 1rem;
+}

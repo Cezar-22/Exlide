@@ -28,6 +28,15 @@ export class OllamaProvider implements LlmProvider {
     this.name = `ollama:${this.options.model}`;
   }
 
+  /** Loads the model into memory: Ollama treats a chat request with no messages as a preload. */
+  async warmUp(): Promise<void> {
+    await fetch(`${this.options.baseUrl}/api/chat`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model: this.options.model, messages: [], keep_alive: this.options.keepAlive }),
+    });
+  }
+
   async complete(request: LlmRequest): Promise<string> {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), request.timeoutMs);

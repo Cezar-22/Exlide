@@ -15,10 +15,13 @@ Operations:
 {"op":"reorder","order":["s2","s1"]}
 
 Rules:
-- Default to no_change. Change the deck only when the speaker said something new worth showing.
+- Default to no_change. Change the deck only when the NEW WORDS add something worth showing. EARLIER text is already on the deck or was skipped on purpose.
 - Add a slide only when the topic has clearly moved on. Otherwise add a bullet to the current slide.
 - When updating, keep the existing bullets and append. Do not reword them.
 - At most ${LIMITS.maxBullets} bullets per slide, each under 10 words. Titles under 7 words.
+- A slide marked "full" takes no more bullets. If the speaker goes on, add a new slide with a different, more specific title.
+- Never reuse an existing slide title. Never repeat a bullet that is already on the deck.
+- Use remove_slide and reorder only when a STEERING note asks for it. Never delete a slide to make room.
 - Use only what the speaker said. Never invent facts, numbers or names.
 - A STEERING note is a direct instruction from the speaker. Follow it now.
 
@@ -33,7 +36,10 @@ Example, nothing new: {"operations":[{"op":"no_change"}]}`;
 
 export interface DirectorPromptInput {
   deck: DeckState;
-  transcript: string;
+  /** Transcript the director has already acted on (context only). */
+  earlier: string;
+  /** Words spoken since the last director call. */
+  latest: string;
   summary: string;
   steering: string | null;
 }
@@ -42,14 +48,20 @@ export interface DirectorPromptInput {
 export function describeDeck(deck: DeckState): string {
   return JSON.stringify({
     current: deck.currentId,
-    slides: deck.slides.map((s) => ({ id: s.id, title: s.title, bullets: s.bullets })),
+    slides: deck.slides.map((s) => ({
+      id: s.id,
+      title: s.title,
+      bullets: s.bullets,
+      ...(s.bullets.length >= LIMITS.maxBullets ? { full: true } : {}),
+    })),
   });
 }
 
 export function buildDirectorUserPrompt(input: DirectorPromptInput): string {
   const lines = [`DECK: ${describeDeck(input.deck)}`];
   if (input.summary !== '') lines.push(`COVERED SO FAR: ${input.summary}`);
-  lines.push(`TRANSCRIPT (latest words last): ${JSON.stringify(input.transcript)}`);
+  if (input.earlier !== '') lines.push(`EARLIER (already handled, context only): ${JSON.stringify(input.earlier)}`);
+  lines.push(`NEW WORDS (since your last update): ${JSON.stringify(input.latest)}`);
   if (input.steering !== null) lines.push(`STEERING: ${JSON.stringify(input.steering)}`);
   return lines.join('\n');
 }

@@ -70,7 +70,7 @@ function printReport(fixture: string, r: ReplayReport): void {
     console.log(`${marker} [${slide.id}] ${slide.title}`);
     for (const bullet of slide.bullets) console.log(`      - ${bullet}`);
   }
-  if (s.errors > 0 && r.provider.startsWith('ollama')) {
+  if (s.calls > 0 && s.errors === s.calls && r.provider.startsWith('ollama')) {
     console.log('hint: is Ollama running? Install from https://ollama.com, then `ollama pull llama3.2:3b`.');
   }
 }

@@ -4,6 +4,8 @@ import { readConfig } from './config.ts';
 import { emptyDeck, type DeckState } from './core/deck.ts';
 import { applyOperations } from './core/reducer.ts';
 import { validateOperations } from './core/schema.ts';
+import { micCheckEvent, micCheckHint, micCheckLevel, micCheckResult, newMicCheck } from './core/mic-check.ts';
+import { CaptionBar } from './ui/caption.ts';
 import { createConsoleDebugLogger } from './ui/debug-console.ts';
 import { DeckView } from './ui/deck-view.ts';
 import { DEMO_OPERATIONS } from './ui/demo.ts';
@@ -38,8 +40,9 @@ const setStatus = (text: string) => {
   status.textContent = text;
 };
 
-const view = new DeckView(stage);
+const view = new DeckView(stage); // clears the stage, so create it first
 await view.init();
+const caption = new CaptionBar(stage);
 
 /** Step 2 demo: a fixed op list through the real validator and reducer. */
 async function playDemo(stepMs: number): Promise<void> {
@@ -81,16 +84,32 @@ function startSession(): Session | null {
 /** Live mode: the mic button starts speech recognition and the director. */
 function mountMic(session: Session): void {
   const mic = requireElement('.mic', HTMLButtonElement);
-  const stt = createSttProvider(config);
+  let check = newMicCheck(Date.now());
+  let checkTimer: ReturnType<typeof setInterval> | null = null;
+  const stt = createSttProvider(config, (event) => {
+    debug.log('stt.state', { event });
+    check = micCheckEvent(check, event);
+  });
   let level: MicLevel | null = null;
   let on = false;
 
-  const setLevel = (value: number) => mic.style.setProperty('--level', value.toFixed(3));
+  const setLevel = (value: number) => {
+    mic.style.setProperty('--level', value.toFixed(3));
+    check = micCheckLevel(check, value, Date.now());
+  };
   const setOn = (value: boolean) => {
     on = value;
     mic.setAttribute('aria-pressed', String(value));
     mic.textContent = value ? 'Stop' : 'Mic';
-    if (!value) {
+    if (checkTimer !== null) clearInterval(checkTimer);
+    checkTimer = null;
+    if (value) {
+      check = newMicCheck(Date.now());
+      checkTimer = setInterval(() => {
+        const hint = micCheckHint(check, Date.now());
+        if (hint !== null) caption.hint(hint);
+      }, 1000);
+    } else {
       level?.stop();
       level = null;
       session.stop();
@@ -99,12 +118,13 @@ function mountMic(session: Session): void {
 
   stt.onSegment((segment) => {
     session.addSegment(segment);
-    setStatus(segment.text); // live caption, so the speaker sees what was heard
+    check = micCheckResult(check);
+    caption.speech(segment.text, segment.isFinal);
   });
   stt.onStateChange((state, detail) => {
     debug.log('stt.state', { state, detail });
     if (state === 'error') {
-      setStatus(detail ?? 'Speech recognition error');
+      caption.hint(detail ?? 'Speech recognition error');
       stt.stop();
       setOn(false);
     }
@@ -121,6 +141,7 @@ function mountMic(session: Session): void {
     if (on) {
       stt.stop();
       setOn(false);
+      caption.clear();
       setStatus('Mic off');
       return;
     }

@@ -55,6 +55,8 @@ Step 4 (speech input, browser):
 - Mic button: open the app with no URL parameters and press **Mic**. `Exlide/src/adapters/stt/webspeech.ts` uses the Web Speech API in continuous mode with interim results, restarts it after pauses, backs off on network errors, and shows clear messages for a denied permission or a missing mic.
 - An input-level ring on the button (`Exlide/src/ui/mic-level.ts`) and "Listening on: <device>" in the status line confirm which mic is live. Recognized words appear there as a live caption.
 - Teaching subjects: the director prompt (`Exlide/src/core/prompts.ts`) knows how to write math, physics and CS formulas (a² + b² = c², F = m·a, O(log n)) and fixes common recognition slips ("pie r squared" → π·r²). There are three lesson fixtures: `math-pythagoras`, `physics-newton`, `cs-binary-search`.
+- A live caption bar shows the words as they're recognized. A built-in mic check (`Exlide/src/core/mic-check.ts`) explains in plain words when the mic has sound but no words come back, when the speech engine never got the mic, or when there's no internet.
+- Tuned against `llama3.1:8b` on the three lesson fixtures (2026-10-14). The model sees which slides are full and which words are new. It may only delete or reorder slides when a typed steering note literally asks for that, so slides the class has seen never vanish.
 - Not done yet: running this inside Tauri (needs the Rust toolchain).
 
 Still missing: speech input inside Tauri (step 4), live loop and proxy (step 5), Tauri packaging (step 6).
@@ -141,7 +143,19 @@ Switch with `LLM_PROVIDER` / `LLM_MODEL` (and later `STT_PROVIDER`) in `Exlide/.
 
 Ruled out: Gemini free tier (Google no longer publishes the limits, reports say they were cut to about 20 req/day on some models, and outside the EEA/UK/CH free-tier data is used and human-reviewed), Cerebras (a 30-day $5 trial, not ongoing free), OpenRouter free models (about 50 req/day), Mistral free tier (requires opting in to training).
 
-Setting up Ollama: install from https://ollama.com, run `ollama pull llama3.2:3b`, and keep it running. The browser dev server (localhost) is on Ollama's default CORS allow-list. The Tauri window on Windows (`http://tauri.localhost`) is not, so step 6 handles that.
+Setting up Ollama: `winget install Ollama.Ollama` (or https://ollama.com), then `ollama pull llama3.1:8b` on a PC with a decent GPU (about 0.7 s per update on an RTX 4070 SUPER), or `ollama pull llama3.2:3b` on a weak laptop. Set `LLM_MODEL` in `Exlide/.env` to match. Ollama starts with Windows and runs in the tray. The browser dev server (localhost) is on Ollama's default CORS allow-list. The Tauri window on Windows (`http://tauri.localhost`) is not, so step 6 handles that.
+
+### Mic troubleshooting
+
+Press **Mic**, then say a full sentence. The words should appear in the dark caption bar at the bottom of the slide area within about a second. If they don't:
+
+1. **Use Chrome or Edge.** `exlide` opens Edge. Other browsers (Opera, Firefox) don't have working speech recognition.
+2. **Allow the microphone** when the browser asks. If you clicked Block: click the icon at the left of the address bar, then Microphone → Allow, and reload.
+3. **Pick the mic in Windows.** Settings → System → Sound → Input: choose the mic and use "Test your microphone". For the Sennheiser HD 450BT choose **"Headset (LE-HD 450BT Hands-Free)"**. The status line shows which device Exlide is listening on.
+4. **Close other apps using the mic** (Teams, Discord, Zoom, OBS). They can hold on to a Bluetooth headset.
+5. **Internet:** Chrome and Edge do speech recognition online. With no connection, the caption bar says so.
+6. **Accent or language:** recognition copes well with accents in English. If you teach in Romanian, set `STT_LANG=ro-RO` in `Exlide/.env` and restart `exlide`.
+7. Still nothing? Press F12 → Console and look for `[exlide] stt.state` lines. The event names (`audiostart`, `soundstart`, `speechstart`, `error:...`) show exactly how far the audio got.
 
 ### Speech-to-text (researched 2026-10-14)
 

@@ -36,6 +36,7 @@ export class Session {
 
   start(): void {
     if (this.timer !== null) return;
+    this.options.llm.warmUp?.().catch(() => undefined); // failures show up on the first real tick
     this.timer = setInterval(() => void this.tick(), this.options.intervalMs);
   }
 
@@ -58,7 +59,12 @@ export class Session {
     const outcome = await this.director.tick();
     const { stats } = this.director;
     if (outcome === 'error') {
-      this.options.onStatus(`${this.options.llm.name} not reachable. Retrying.`);
+      const local = this.options.llm.name.startsWith('ollama');
+      this.options.onStatus(
+        local
+          ? 'No slides yet: the AI model (Ollama) is not running. See README, "Providers".'
+          : `No slides yet: ${this.options.llm.name} is not reachable. Retrying.`,
+      );
     } else if (outcome !== 'skipped-busy' && outcome !== 'skipped-idle') {
       this.options.onStatus(`${this.options.llm.name}: ${stats.calls} calls, ${stats.appliedOps} changes`);
     }

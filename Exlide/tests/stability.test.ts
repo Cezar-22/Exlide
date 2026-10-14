@@ -9,20 +9,20 @@ const deck = applyOperation(emptyDeck(0), { op: 'add_slide', title: 'A', bullets
 
 describe('applyStability', () => {
   it('holds every change while the slide is younger than the dwell time', () => {
-    const r = applyStability([{ op: 'add_slide', title: 'B', bullets: [] }], deck, 7999, opts, false);
+    const r = applyStability([{ op: 'add_slide', title: 'B', bullets: [] }], deck, 7999, opts, null);
     expect(r.allowed).toEqual([]);
     expect(r.held[0]?.reason).toMatch(/long enough/);
     expect(dwellRemaining(deck, 7999, opts)).toBe(1);
   });
 
   it('allows changes after the dwell time', () => {
-    const r = applyStability([{ op: 'add_slide', title: 'B', bullets: [] }], deck, 8000, opts, false);
+    const r = applyStability([{ op: 'add_slide', title: 'B', bullets: [] }], deck, 8000, opts, null);
     expect(r.allowed).toHaveLength(1);
   });
 
   it('an empty deck has no dwell time', () => {
     expect(dwellRemaining(emptyDeck(0), 1, opts)).toBe(0);
-    expect(applyStability([{ op: 'add_slide', title: 'A', bullets: [] }], emptyDeck(0), 1, opts, false).allowed).toHaveLength(1);
+    expect(applyStability([{ op: 'add_slide', title: 'A', bullets: [] }], emptyDeck(0), 1, opts, null).allowed).toHaveLength(1);
   });
 
   it('steering overrides the dwell time and churn limits', () => {
@@ -30,7 +30,7 @@ describe('applyStability', () => {
       { op: 'add_slide', title: 'B', bullets: [] },
       { op: 'add_slide', title: 'C', bullets: [] },
     ] as const;
-    const r = applyStability(ops, deck, 100, opts, true);
+    const r = applyStability(ops, deck, 100, opts, 'add two slides');
     expect(r.allowed).toHaveLength(2);
     expect(r.held).toEqual([]);
   });
@@ -44,23 +44,38 @@ describe('applyStability', () => {
       deck,
       10_000,
       opts,
-      false,
+      null,
     );
     expect(r.allowed.map((o) => o.op)).toEqual(['add_slide']);
     expect(r.held[0]?.reason).toMatch(/new slide/);
   });
 
   it('allows appending bullets and one edit, but not a rewrite', () => {
-    const append = applyStability([{ op: 'update_bullets', slide: 's1', bullets: ['one', 'two', 'three', 'four'] }], deck, 10_000, opts, false);
+    const append = applyStability([{ op: 'update_bullets', slide: 's1', bullets: ['one', 'two', 'three', 'four'] }], deck, 10_000, opts, null);
     expect(append.allowed).toHaveLength(1);
-    const oneEdit = applyStability([{ op: 'update_bullets', slide: 's1', bullets: ['One', 'two', 'drei'] }], deck, 10_000, opts, false);
+    const oneEdit = applyStability([{ op: 'update_bullets', slide: 's1', bullets: ['One', 'two', 'drei'] }], deck, 10_000, opts, null);
     expect(oneEdit.allowed).toHaveLength(1); // case-insensitive match, one changed
-    const rewrite = applyStability([{ op: 'update_bullets', slide: 's1', bullets: ['uno', 'dos', 'three'] }], deck, 10_000, opts, false);
+    const rewrite = applyStability([{ op: 'update_bullets', slide: 's1', bullets: ['uno', 'dos', 'three'] }], deck, 10_000, opts, null);
     expect(rewrite.allowed).toEqual([]);
     expect(rewrite.held[0]?.reason).toMatch(/rewrite 2/);
   });
 
+  it('holds remove_slide and reorder unless a steering note asks', () => {
+    const ops = [
+      { op: 'remove_slide', slide: 's1' },
+      { op: 'reorder', order: ['s1'] },
+    ] as const;
+    const auto = applyStability(ops, deck, 10_000, opts, null);
+    expect(auto.allowed).toEqual([]);
+    expect(auto.held.map((h) => h.reason)).toEqual(['remove_slide only on a steering note', 'reorder only on a steering note']);
+    expect(applyStability(ops, deck, 10_000, opts, 'remove slide A and reorder the rest').allowed).toHaveLength(2);
+    // A note that only asks for something else does not license deleting slides.
+    const other = applyStability(ops, deck, 10_000, opts, 'add a slide with a practice exercise');
+    expect(other.allowed).toEqual([]);
+    expect(other.held[0]?.reason).toBe('steering note did not ask for remove_slide');
+  });
+
   it('drops no_change from the result', () => {
-    expect(applyStability([{ op: 'no_change' }], deck, 10_000, opts, false)).toEqual({ allowed: [], held: [] });
+    expect(applyStability([{ op: 'no_change' }], deck, 10_000, opts, null)).toEqual({ allowed: [], held: [] });
   });
 });

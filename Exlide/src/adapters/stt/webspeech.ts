@@ -13,6 +13,9 @@ export interface RecognitionLike {
   onresult: ((event: RecognitionResultEvent) => void) | null;
   onerror: ((event: { error: string; message?: string }) => void) | null;
   onend: (() => void) | null;
+  onaudiostart?: (() => void) | null;
+  onsoundstart?: (() => void) | null;
+  onspeechstart?: (() => void) | null;
   start(): void;
   stop(): void;
   abort(): void;
@@ -43,16 +46,24 @@ export class WebSpeechProvider implements SttProvider {
   private readonly ctor: RecognitionCtor | null;
   private readonly lang: string;
   private readonly now: () => number;
+  private readonly onDebug: (event: string) => void;
   private recognition: RecognitionLike | null = null;
   private wanted = false;
   private failures = 0;
   private readonly segmentListeners = new Set<(s: TranscriptSegment) => void>();
   private readonly stateListeners = new Set<(s: SttState, detail?: string) => void>();
 
-  constructor(options: { ctor: RecognitionCtor | null; lang: string; now?: () => number }) {
+  constructor(options: {
+    ctor: RecognitionCtor | null;
+    lang: string;
+    now?: () => number;
+    /** Low-level recognizer events (audiostart, soundstart, errors...) for diagnostics. */
+    onDebug?: (event: string) => void;
+  }) {
     this.ctor = options.ctor;
     this.lang = options.lang;
     this.now = options.now ?? (() => Date.now());
+    this.onDebug = options.onDebug ?? (() => undefined);
   }
 
   isSupported(): boolean {
@@ -103,7 +114,11 @@ export class WebSpeechProvider implements SttProvider {
         this.emit({ text: result[0].transcript, isFinal: result.isFinal, at: this.now() });
       }
     };
+    rec.onaudiostart = () => this.onDebug('audiostart');
+    rec.onsoundstart = () => this.onDebug('soundstart');
+    rec.onspeechstart = () => this.onDebug('speechstart');
     rec.onerror = (event) => {
+      this.onDebug(`error:${event.error}`);
       const fatal = FATAL[event.error];
       if (fatal) {
         this.wanted = false;
@@ -114,6 +129,7 @@ export class WebSpeechProvider implements SttProvider {
       // 'no-speech' and 'aborted' are normal during pauses; onend restarts.
     };
     rec.onend = () => {
+      this.onDebug('end');
       if (this.recognition !== rec || !this.wanted) return;
       if (this.failures >= 5) {
         this.wanted = false;
