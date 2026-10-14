@@ -63,6 +63,10 @@ Still missing: speech input inside Tauri (step 4), live loop and proxy (step 5),
 
 Requires Node.js 22.18+ (developed on 24.20).
 
+**Quick start:** type `exlide` in any new terminal (cmd, PowerShell or Git Bash). It installs dependencies on the first run, starts the dev server and opens http://localhost:5173 in Edge. Stop it with Ctrl+C. The launchers are `Exlide/bin/exlide.cmd` and `Exlide/bin/exlide`, and `Exlide/bin` was added to the user PATH. On another machine, add that folder to PATH yourself. `EXLIDE_NO_BROWSER=1` skips opening the browser.
+
+Manual way:
+
 ```
 cd Exlide
 npm install
