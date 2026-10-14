@@ -2,7 +2,7 @@
 
 Exlide is a live presentation tool. It listens to a speaker through the microphone, transcribes the speech in real time, and uses an AI model to build and update a slide deck on screen while the speaker talks. The speaker never prepares slides in advance. They can also type short steering notes (e.g. "skip the history, go to examples"), which the AI treats as high-priority instructions.
 
-The UI is minimal: a microphone button, a steering text input, and the slide view. Keep it that way.
+The UI is minimal: a microphone button, a steering text input, and the slide view. Keep it that way. Before the presentation there is a landing page (the user's own design: logo, Start / Info / Settings, in `src/ui/landing.ts`); Start opens the presentation and turns the mic on. Do not restyle the landing page: the user owns its design.
 
 Exlide must run as a standalone browser app and as a Windows `.exe` (Tauri) from one codebase.
 

@@ -1,0 +1,282 @@
+/* Landing page, ported from the user's "web interface v1" design (Lovable /
+   Tailwind) to plain CSS. Tokens and components are kept 1:1; everything is
+   scoped under .landing so it cannot leak into the presentation view. */
+
+.landing {
+  --l-radius: 0.875rem;
+  --l-background: oklch(0.965 0.003 150);
+  --l-foreground: oklch(0.2 0.01 150);
+  --l-card: oklch(0.99 0.002 150);
+  --l-primary: oklch(0.62 0.17 152);
+  --l-primary-foreground: oklch(0.99 0.01 150);
+  --l-muted-foreground: oklch(0.5 0.01 150);
+  --l-accent-foreground: oklch(0.3 0.08 152);
+  --l-border: oklch(0.88 0.005 150);
+  --l-ring: oklch(0.62 0.17 152);
+  --l-glow: 0 20px 50px -18px oklch(0.62 0.17 152 / 0.55);
+  --l-soft: 0 1px 2px oklch(0.2 0.01 150 / 0.06), 0 8px 24px -12px oklch(0.2 0.01 150 / 0.18);
+
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0 1.5rem;
+  overflow-y: auto;
+  color-scheme: light;
+  background-color: var(--l-background);
+  background-image:
+    radial-gradient(circle at 50% 30%, oklch(0.62 0.17 152 / 0.12), transparent 55%),
+    linear-gradient(oklch(0.2 0.01 150 / 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, oklch(0.2 0.01 150 / 0.045) 1px, transparent 1px);
+  background-size: 100% 100%, 44px 44px, 44px 44px;
+  color: var(--l-foreground);
+  font-family: 'Manrope', ui-sans-serif, system-ui, sans-serif;
+  transition: opacity 0.35s ease;
+}
+
+.landing[hidden] {
+  display: none;
+}
+
+.landing.leaving {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.landing .hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  animation: l-fade-up 0.7s ease both;
+}
+
+.landing .logo {
+  width: 18rem;
+  height: 18rem;
+  margin: -2rem 0;
+}
+
+@media (min-width: 640px) {
+  .landing .logo {
+    width: 20rem;
+    height: 20rem;
+  }
+}
+
+.landing .tagline {
+  max-width: 28rem;
+  margin: 1rem 0 0;
+  font-size: 1rem;
+  color: var(--l-muted-foreground);
+}
+
+.landing .wave {
+  display: flex;
+  gap: 0.25rem;
+  align-items: center;
+  height: 1.5rem;
+  margin-top: 1.25rem;
+}
+
+.landing .wave span {
+  display: inline-block;
+  width: 3px;
+  border-radius: 3px;
+  background: var(--l-primary);
+  animation: l-wave 1.2s ease-in-out infinite;
+}
+
+.landing .wave span:nth-child(2) { animation-delay: 0.15s; }
+.landing .wave span:nth-child(3) { animation-delay: 0.3s; }
+.landing .wave span:nth-child(4) { animation-delay: 0.45s; }
+.landing .wave span:nth-child(5) { animation-delay: 0.6s; }
+
+.landing .btn {
+  display: inline-flex;
+  gap: 0.6rem;
+  align-items: center;
+  justify-content: center;
+  height: 3.25rem;
+  padding: 0 1.5rem;
+  border: 0;
+  border-radius: var(--l-radius);
+  font: inherit;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.landing .btn:focus-visible {
+  outline: 2px solid var(--l-ring);
+  outline-offset: 3px;
+}
+
+.landing .btn svg {
+  flex: none;
+}
+
+.landing .btn-primary {
+  min-width: 14rem;
+  height: 3.75rem;
+  margin-top: 2.5rem;
+  background: var(--l-primary);
+  color: var(--l-primary-foreground);
+  box-shadow: var(--l-glow);
+  font-size: 1.05rem;
+}
+
+.landing .btn-primary:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.06);
+}
+
+.landing .btn-primary:disabled {
+  cursor: progress;
+  filter: saturate(0.6);
+  transform: none;
+}
+
+.landing .btn-ghost {
+  border: 1px solid var(--l-border);
+  background: var(--l-card);
+  color: var(--l-foreground);
+  box-shadow: var(--l-soft);
+}
+
+.landing .btn-ghost:hover {
+  border-color: var(--l-primary);
+  color: var(--l-accent-foreground);
+  transform: translateY(-1px);
+}
+
+.landing .secondary {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.landing .version {
+  position: absolute;
+  bottom: 1.5rem;
+  font-size: 0.75rem;
+  color: var(--l-muted-foreground);
+}
+
+/* Info / Settings dialogs, same visual language */
+.landing-dialog {
+  width: min(30rem, calc(100% - 2rem));
+  padding: 1.5rem;
+  border: 1px solid oklch(0.88 0.005 150);
+  border-radius: 0.875rem;
+  background: oklch(0.99 0.002 150);
+  color: oklch(0.2 0.01 150);
+  box-shadow: 0 24px 60px -20px oklch(0.2 0.01 150 / 0.35);
+  font-family: 'Manrope', ui-sans-serif, system-ui, sans-serif;
+  color-scheme: light;
+}
+
+.landing-dialog::backdrop {
+  background: oklch(0.2 0.01 150 / 0.35);
+  backdrop-filter: blur(2px);
+}
+
+.landing-dialog h2 {
+  margin: 0 0 0.75rem;
+  font-family: 'Sora', ui-sans-serif, system-ui, sans-serif;
+  font-size: 1.25rem;
+}
+
+.landing-dialog p,
+.landing-dialog li {
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: oklch(0.35 0.01 150);
+}
+
+.landing-dialog ol {
+  padding-left: 1.25rem;
+}
+
+.landing-dialog label {
+  display: grid;
+  gap: 0.35rem;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.landing-dialog select,
+.landing-dialog input {
+  height: 2.5rem;
+  padding: 0 0.75rem;
+  border: 1px solid oklch(0.88 0.005 150);
+  border-radius: 0.6rem;
+  background: #fff;
+  color: inherit;
+  font: inherit;
+  font-weight: 400;
+}
+
+.landing-dialog .hint {
+  font-size: 0.8rem;
+  font-weight: 400;
+  color: oklch(0.5 0.01 150);
+}
+
+.landing-dialog .actions {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+  margin-top: 1.25rem;
+}
+
+.landing-dialog .actions button {
+  height: 2.5rem;
+  padding: 0 1.1rem;
+  border: 1px solid oklch(0.88 0.005 150);
+  border-radius: 0.6rem;
+  background: #fff;
+  color: inherit;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.landing-dialog .actions .primary {
+  border-color: transparent;
+  background: oklch(0.62 0.17 152);
+  color: #fff;
+}
+
+@keyframes l-wave {
+  0%,
+  100% {
+    height: 6px;
+  }
+  50% {
+    height: 20px;
+  }
+}
+
+@keyframes l-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing .hero,
+  .landing .wave span {
+    animation: none;
+  }
+}

@@ -1,21 +1,25 @@
 import { createLlmProvider } from './adapters/llm/index.ts';
 import { createSttProvider } from './adapters/stt/index.ts';
-import { readConfig } from './config.ts';
+import { readConfig, type AppConfig } from './config.ts';
 import { emptyDeck, type DeckState } from './core/deck.ts';
+import { micCheckEvent, micCheckHint, micCheckLevel, micCheckResult, newMicCheck } from './core/mic-check.ts';
 import { applyOperations } from './core/reducer.ts';
 import { validateOperations } from './core/schema.ts';
-import { micCheckEvent, micCheckHint, micCheckLevel, micCheckResult, newMicCheck } from './core/mic-check.ts';
+import { applySettings, browserStore, defaultSettings, loadSettings, saveSettings } from './settings.ts';
 import { CaptionBar } from './ui/caption.ts';
 import { createConsoleDebugLogger } from './ui/debug-console.ts';
 import { DeckView } from './ui/deck-view.ts';
 import { DEMO_OPERATIONS } from './ui/demo.ts';
+import { mountLanding } from './ui/landing.ts';
 import { startMicLevel, type MicLevel } from './ui/mic-level.ts';
 import { mountPastePanel } from './ui/paste-panel.ts';
 import { Session } from './ui/session.ts';
 import './ui/styles.css';
 
-const config = readConfig(__EXLIDE_ENV__);
-const debug = createConsoleDebugLogger(config.debug);
+const baseConfig = readConfig(__EXLIDE_ENV__);
+const debug = createConsoleDebugLogger(baseConfig.debug);
+const store = browserStore();
+let settings = loadSettings(store, defaultSettings(baseConfig));
 
 function requireElement<T extends Element>(selector: string, type: new () => T): T {
   const el = document.querySelector(selector);
@@ -40,12 +44,15 @@ const setStatus = (text: string) => {
   status.textContent = text;
 };
 
-const view = new DeckView(stage); // clears the stage, so create it first
-await view.init();
-const caption = new CaptionBar(stage);
+/** Builds the slide view. reveal.js needs a visible container, so call this once #app is shown. */
+async function createView(): Promise<{ view: DeckView; caption: CaptionBar }> {
+  const view = new DeckView(stage); // clears the stage, so create it before the caption
+  await view.init();
+  return { view, caption: new CaptionBar(stage) };
+}
 
 /** Step 2 demo: a fixed op list through the real validator and reducer. */
-async function playDemo(stepMs: number): Promise<void> {
+async function playDemo(view: DeckView, stepMs: number): Promise<void> {
   let deck: DeckState = emptyDeck(Date.now());
   for (const batch of DEMO_OPERATIONS) {
     const report = validateOperations(batch, deck);
@@ -56,7 +63,7 @@ async function playDemo(stepMs: number): Promise<void> {
   }
 }
 
-function startSession(): Session | null {
+function startSession(config: AppConfig, view: DeckView): Session | null {
   try {
     const session = new Session({
       llm: createLlmProvider(config),
@@ -81,8 +88,8 @@ function startSession(): Session | null {
   }
 }
 
-/** Live mode: the mic button starts speech recognition and the director. */
-function mountMic(session: Session): void {
+/** Live mode: the mic button toggles speech recognition and the director. Returns the toggle. */
+function mountMic(config: AppConfig, session: Session, caption: CaptionBar): () => Promise<void> {
   const mic = requireElement('.mic', HTMLButtonElement);
   let check = newMicCheck(Date.now());
   let checkTimer: ReturnType<typeof setInterval> | null = null;
@@ -127,17 +134,11 @@ function mountMic(session: Session): void {
       caption.hint(detail ?? 'Speech recognition error');
       stt.stop();
       setOn(false);
+      setStatus('Mic off. Press Mic to try again.');
     }
   });
 
-  mic.disabled = false;
-  if (!stt.isSupported()) {
-    mic.disabled = true;
-    setStatus('Speech recognition needs Chrome or Edge.');
-    return;
-  }
-
-  mic.addEventListener('click', async () => {
+  const toggle = async (): Promise<void> => {
     if (on) {
       stt.stop();
       setOn(false);
@@ -149,22 +150,53 @@ function mountMic(session: Session): void {
       level = await startMicLevel(setLevel); // also triggers the permission prompt
       setStatus(`Listening on: ${level.deviceLabel}`);
     } catch (error) {
-      setStatus(`Microphone unavailable: ${error instanceof Error ? error.message : String(error)}`);
+      caption.hint(`Microphone unavailable: ${error instanceof Error ? error.message : String(error)}`);
       return;
     }
     setOn(true);
     session.start();
     await stt.start();
-  });
+  };
+
+  if (!stt.isSupported()) {
+    caption.hint('Speech recognition needs Chrome or Edge.');
+    return () => Promise.resolve();
+  }
+  mic.disabled = false;
+  mic.addEventListener('click', () => void toggle());
+  return toggle;
 }
 
 const params = new URLSearchParams(location.search);
 if (params.has('demo')) {
-  void playDemo(Number(params.get('demo')) || 2000);
+  const { view } = await createView();
+  void playDemo(view, Number(params.get('demo')) || 2000);
 } else if (params.has('paste')) {
-  const session = startSession();
+  const { view } = await createView();
+  const session = startSession(baseConfig, view);
   if (session) mountPastePanel(stage, session, Number(params.get('paste')) || 1);
 } else {
-  const session = startSession();
-  if (session) mountMic(session);
+  // Normal use: landing page first; Start opens the presentation and turns the mic on.
+  root.hidden = true;
+  let started = false;
+  const landing = mountLanding({
+    settings,
+    version: __EXLIDE_VERSION__,
+    onSaveSettings: (next) => {
+      settings = next;
+      if (!saveSettings(store, next)) debug.log('stt.error', { error: 'settings could not be saved in this browser' });
+    },
+    onStart: async () => {
+      if (started) return;
+      started = true;
+      const config = applySettings(baseConfig, settings);
+      root.hidden = false;
+      const { view, caption } = await createView();
+      const session = startSession(config, view);
+      landing.hide();
+      if (!session) return;
+      const startMic = mountMic(config, session, caption);
+      await startMic(); // same click as Start, so the mic permission prompt appears right away
+    },
+  });
 }

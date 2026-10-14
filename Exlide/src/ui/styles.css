@@ -2,11 +2,11 @@
   --bg: #0f1115;
   --fg: #e8eaf0;
   --muted: #8a90a2;
-  --accent: #4f8cff;
+  --accent: oklch(0.62 0.17 152); /* brand green, from the landing design */
   --danger: #ff5a5f;
   --panel: #181b22;
   color-scheme: dark;
-  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  font-family: 'Manrope', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
 }
 
 html,
@@ -220,4 +220,8 @@ body {
 .caption.hint {
   background: rgb(120 70 0 / 0.85);
   font-size: 1rem;
+}
+
+#app[hidden] {
+  display: none;
 }

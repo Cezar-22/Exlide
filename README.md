@@ -59,6 +59,12 @@ Step 4 (speech input, browser):
 - Tuned against `llama3.1:8b` on the three lesson fixtures (2026-10-14). The model sees which slides are full and which words are new. It may only delete or reorder slides when a typed steering note literally asks for that, so slides the class has seen never vanish.
 - Not done yet: running this inside Tauri (needs the Rust toolchain).
 
+Landing page (user's design, "web interface v1"):
+- The app opens on the landing page: logo, tagline, wave animation, Start / Info / Settings. **Start** opens the presentation and turns the mic on in the same click, so the permission prompt appears right away.
+- **Info** is a short how-to. **Settings** sets the speech language, slide-update speed and AI model. They're saved in the browser (`localStorage`) and override the `.env` defaults (`Exlide/src/settings.ts`).
+- The design came from a Lovable project (React, Tailwind, TanStack Start). It was ported 1:1 to plain TypeScript + CSS (`Exlide/src/ui/landing.ts`, `landing.css`) instead of adding React and ~60 packages. The original folder `web interface v1/` is left untouched and kept out of git (`.git/info/exclude`). Logo: `Exlide/src/assets/exlide-logo.png`. Fonts: Manrope + Sora from Google Fonts.
+- `?demo` and `?paste` skip the landing page.
+
 Still missing: speech input inside Tauri (step 4), live loop and proxy (step 5), Tauri packaging (step 6).
 
 ## Run
@@ -120,6 +126,7 @@ Fixture format (`Exlide/src/core/fixture.ts`): `[mm:ss] spoken text`, `[mm:ss] >
 - Slide limits (bullets, lengths): `LIMITS` in `Exlide/src/core/deck.ts`.
 - Which env vars the browser can see: `PUBLIC_ENV` in `Exlide/vite.config.ts`. Never add a key there.
 - App config defaults: `Exlide/src/config.ts`.
+- Landing page: `Exlide/src/ui/landing.ts` (markup, Info text, Settings form) and `Exlide/src/ui/landing.css` (design tokens at the top). Settings fields and their validation: `Exlide/src/settings.ts`.
 - UI look: `Exlide/src/ui/styles.css`. reveal.js theme: the `reveal.js/theme/*.css` import in `Exlide/src/ui/deck-view.ts`.
 - How decks render and animate: `Exlide/src/ui/deck-view.ts`. Demo script: `Exlide/src/ui/demo.ts`.
 - Single-file build: the `inlineIntoHtml` plugin in `Exlide/vite.config.ts`.

@@ -66,6 +66,7 @@ export default defineConfig(({ mode }) => {
     clearScreen: false,
     define: {
       __EXLIDE_ENV__: JSON.stringify(publicEnv),
+      __EXLIDE_VERSION__: JSON.stringify(process.env['npm_package_version'] ?? '0.1.0'),
     },
     plugins: single ? [inlineIntoHtml()] : [],
     build: single
