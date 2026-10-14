@@ -15,6 +15,7 @@
     "replay": "node scripts/replay.ts",
     "server": "node server/proxy.ts",
     "build": "vite build",
+    "build:single": "vite build --mode single",
     "preview": "vite preview"
   },
   "devDependencies": {

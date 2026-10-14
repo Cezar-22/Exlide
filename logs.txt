@@ -20,3 +20,9 @@
 [2026-10-14 18:40] [step 1] DECISION validator drops add_slide with a duplicate title (weak models re-add slides); accepts array, {operations:[...]}, single op, fenced or chatter-wrapped JSON. Ops are validated in sequence against the simulated deck.
 [2026-10-14 18:40] [step 1] DECISION no-op edits return the same deck object (no version bump), so the renderer can skip them and avoid flicker.
 [2026-10-14 18:40] [step 1] VERIFIED typecheck OK, 26 tests pass (reducer 9, schema 14, config 3).
+[2026-10-14 18:43] [step 2] CREATED src/ui/deck-view.ts (reveal.js wrapper: DOM diff by slide id, bullets fade in, textContent only), src/ui/demo.ts (fixed op list, ?demo), src/ui/debug-console.ts; main.ts wires validator -> reducer -> view.
+[2026-10-14 18:43] [step 2] DECISION reveal.js embedded mode, keyboard/hash/controls off (the director drives navigation; typing in the steer box must not change slides). Theme: black.
+[2026-10-14 18:43] [step 2] FIX "Slides appear here" placeholder showed over slides: .empty{display:grid} overrode [hidden]; added .empty[hidden]{display:none}. Found via headless Edge screenshot.
+[2026-10-14 18:43] [step 2] ADDED npm run build:single (custom Vite plugin, no new dep): inlines JS+CSS into dist-single/index.html. User asked if the app can run as an HTML file. Verified: opens from file:// in headless Edge and plays the demo. Size ~758 kB (reveal theme inlines fonts).
+[2026-10-14 18:43] [step 2] NOTE dev tooling (typecheck/tests/build) still needs Node; only the built output is a plain HTML file.
+[2026-10-14 18:43] [step 2] VERIFIED typecheck OK, 26 tests pass, vite build + build:single OK, demo rendered correctly in headless Edge (served and file://). DeckView has no unit tests (no DOM test env approved); verified by screenshots.
