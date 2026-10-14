@@ -70,6 +70,8 @@ Do not use anything whose free terms you cannot confirm. Log your findings and c
 
 ## Commands
 
+Run these inside `Exlide/` (the app folder).
+
 ```
 npm install            # install dependencies
 npm run dev            # Vite dev server (browser app)
@@ -93,22 +95,27 @@ Do not report a task as done until both pass, and log the result. Do not silence
 
 1. **Audio capture:** browser `getUserMedia` or the Web Speech API, through the `SttProvider` interface.
 2. **Transcript buffer:** the last few minutes of final text plus a running summary of what has been covered.
-3. **Slide director:** every few seconds, or when a sentence completes, send the buffer, the current deck state and any pending steering note to the `LlmProvider`. The model returns **only a JSON array of operations**, never a full deck: `add_slide`, `update_bullets`, `set_title`, `remove_slide`, `reorder`, `no_change`.
+3. **Slide director:** every few seconds, or when a sentence completes, send the buffer, the current deck state and any pending steering note to the `LlmProvider`. The model returns **only operations**, never a full deck, as `{"operations": [...]}` (an object wrapper, because providers' JSON-schema modes need an object at the top level; the parser also accepts a bare array): `add_slide`, `update_bullets`, `set_title`, `remove_slide`, `reorder`, `no_change`.
 4. **Operation validation:** every model output is validated against a typed schema before it touches the deck. Invalid operations are dropped and logged by the app's debug logger, never applied. Treat model output as untrusted input.
 5. **Renderer:** applies validated operations to the reveal.js deck with a short animation.
 6. **Shared core:** transcript buffer, director, operations and deck state live in a platform-independent module with **no DOM or Tauri imports**. Only the UI and the adapters are platform-specific.
 
-Suggested layout:
+Layout (the app lives in `Exlide/`; the repo root holds only claude.md, logs.txt, README.md, .gitignore):
 
 ```
-src/
-  core/        # transcript, director, prompts, operations, schema, deck reducer (pure TS)
-  adapters/    # stt/ and llm/ providers, browser + Tauri implementations
-  ui/          # mic button, steering input, deck component
-server/        # small proxy, only needed for hosted providers that use API keys
-fixtures/      # recorded transcripts for replay mode
-logs.txt       # your work log (not written by the app)
+Exlide/
+  src/
+    core/      # transcript, director, prompts, operations, schema, deck reducer, stability, replay (pure TS)
+    adapters/  # stt/ and llm/ providers, browser + Tauri implementations
+    ui/        # mic button, steering input, deck component
+  server/      # small proxy + keyed providers (Node only), only for hosted providers that use API keys
+  scripts/     # replay CLI
+  fixtures/    # recorded transcripts for replay mode
+  tests/       # Vitest
+logs.txt       # your work log, repo root (not written by the app)
 ```
+
+`tsconfig.core.json` has no DOM or Node types, so typecheck fails if `src/core` touches a platform API.
 
 ## Director rules
 

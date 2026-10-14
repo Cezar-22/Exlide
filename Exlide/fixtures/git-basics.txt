@@ -1,0 +1,28 @@
+# Talk: "Git for people who are scared of Git", about 3 minutes, conversational, lots of filler.
+# Topic shifts: what git is -> commits -> branches -> (tangent back to commits) -> merging.
+# Steering note at 2:35 asks for a summary slide.
+[00:00] Okay, hi. So, um, this is a talk for people who are a bit scared of Git.
+[00:06] And honestly that was me for like three years, so no judgement.
+[00:12] So what is Git. Git is a tool that remembers every version of your project.
+[00:19] It runs on your own computer. GitHub is a website that hosts Git projects, but it's not the same thing.
+[00:27] Yeah. People mix those two up all the time.
+[00:33] So the basic unit in Git is the commit.
+[00:38] A commit is a snapshot of all your files at one moment, plus a message saying what you changed.
+[00:46] You choose what goes into a commit by staging files first, with git add.
+[00:53] And then git commit saves the snapshot. Small commits with clear messages make your life much easier later.
+[01:02] Um, so, right.
+[01:05] Branches. A branch is just a movable label that points at a commit.
+[01:12] You make a branch when you want to try something without breaking the main version.
+[01:19] Switching branches changes the files on your disk to match that branch.
+[01:26] And creating a branch is basically free, it takes no time and no space.
+[01:33] Oh, actually, one more thing about commits that I forgot.
+[01:38] Every commit has an ID, a long hash, and you can always go back to any commit by its ID.
+[01:46] That is why it's really hard to permanently lose work in Git once it's committed.
+[01:53] Okay, back to branches. So once your experiment works, you want it back in main.
+[02:00] That's merging. Git merge takes the changes from one branch and combines them into another.
+[02:08] Most of the time Git does this automatically.
+[02:13] A merge conflict happens when two branches changed the same lines, and Git asks you to pick.
+[02:21] Conflicts look scary, but you just edit the file, keep what you want, and commit again.
+[02:30] >> make a final summary slide with the three commands
+[02:35] So if you remember only three commands: git add, git commit, and git merge.
+[02:42] That's it. Thanks for listening, and please don't be scared of Git.

@@ -27,8 +27,11 @@ export interface SttProvider {
 export interface LlmRequest {
   system: string;
   user: string;
-  /** Ask the provider for its JSON / structured-output mode when it has one. */
-  json: boolean;
+  /**
+   * JSON Schema for the reply. Providers use their structured-output mode
+   * when they have one, or plain JSON mode otherwise. null = free text.
+   */
+  jsonSchema: Record<string, unknown> | null;
   temperature: number;
   maxTokens: number;
   timeoutMs: number;

@@ -41,7 +41,17 @@ Step 2 (renderer):
 - A fixed demo operation list (`Exlide/src/ui/demo.ts`) drives the renderer through the real validator. It includes one deliberately bad op, which gets dropped and logged.
 - `npm run build:single` builds the whole browser app into a single `index.html` that opens straight from disk.
 
-Still missing: director and LLM providers (step 3), speech input (step 4), live loop and proxy (step 5), Tauri packaging (step 6).
+Step 3 (director, no audio yet):
+- `Exlide/src/core/director.ts` runs one tick at a time. It skips the call when there are no new words, when the current slide is younger than 8 s, or when a call is already running. Otherwise it sends the transcript window, the deck and any steering note to the LLM. Invalid replies get one retry with the error message, then a fallback to `no_change`.
+- `Exlide/src/core/stability.ts` enforces the 8 s dwell, at most one new slide per reply, and at most one existing bullet reworded or removed per update. Typed steering notes override all three.
+- `Exlide/src/core/transcript.ts` keeps the last 3 minutes of final text and a running summary (the titles already on the deck).
+- `Exlide/src/core/prompts.ts` holds a short prompt with two examples. `Exlide/src/core/json-schema.ts` is the reply schema, passed to providers' structured-output modes.
+- Providers: `Exlide/src/adapters/llm/ollama.ts` (browser and Node) and `Exlide/server/llm/openai-compatible.ts` (Groq, server/Node only because it needs a key).
+- Replay mode (`npm run replay`) and two recorded fixtures. In the app, `?paste` opens a dev panel to play a pasted transcript in real time, and the steering input works there.
+
+Not yet verified against a real model: Ollama is not installed on the dev machine and there is no Groq key yet. Everything is tested with a mock LLM.
+
+Still missing: speech input (step 4), live loop and proxy (step 5), Tauri packaging (step 6).
 
 ## Run
 
@@ -63,7 +73,9 @@ cd Exlide
 npm run build:single     # writes Exlide/dist-single/index.html (~760 kB, fonts inlined)
 ```
 
-Double-click that file to open it in Chrome or Edge, and add `?demo` to the URL to see the demo. Caveats for later steps: on `file://` the browser asks for mic permission more often, and a local Ollama only accepts requests from `file://` if you set `OLLAMA_ORIGINS` (see Providers once step 3 lands).
+Double-click that file to open it in Chrome or Edge, and add `?demo` to the URL to see the demo. Caveats: on `file://` the browser asks for mic permission more often. Browsers also send `Origin: null` from `file://`, which Ollama's default allow-list probably rejects, so set `OLLAMA_ORIGINS=*` (untested) or use `npm run dev` instead.
+
+Director without a mic: start Ollama (see Providers), run `npm run dev`, open http://localhost:5173/?paste, paste a transcript (or a file from `Exlide/fixtures/`) and press Play. `?paste=4` plays it 4x faster. Type steering notes in the bottom input.
 
 Tauri build: not set up yet (step 6).
 
@@ -75,7 +87,19 @@ npm run typecheck   # tsc against three configs: core (no DOM), app (DOM), node 
 npm test            # Vitest, no network calls
 ```
 
-Replay mode (`npm run replay`) arrives with the director in step 3.
+Replay mode feeds the recorded transcripts in `Exlide/fixtures/` through the director on a simulated clock (no mic, no waiting between ticks) and prints a quality report: calls, retries, fallbacks, valid / dropped / `no_change` counts, ops held by stability, latency, screen changes, the shortest time any slide stayed up, and the final deck.
+
+```
+cd Exlide
+npm run replay                                   # all fixtures, provider from .env (default ollama)
+npm run replay -- --provider mock --no-latency   # offline pipeline check
+npm run replay -- --provider ollama --model qwen3:4b --fixture fixtures/git-basics.txt
+npm run replay -- --provider groq --interval 4000   # needs HOSTED_LLM_API_KEY in .env
+npm run replay -- --verbose                      # also print every prompt / reply / dropped op
+npm run replay -- --json > report.json           # machine-readable, to compare providers
+```
+
+Fixture format (`Exlide/src/core/fixture.ts`): `[mm:ss] spoken text`, `[mm:ss] >> steering note`, `# comment`. Plain prose works too and is timed at a normal speaking rate.
 
 ## Modify
 
@@ -87,9 +111,28 @@ Replay mode (`npm run replay`) arrives with the director in step 3.
 - UI look: `Exlide/src/ui/styles.css`. reveal.js theme: the `reveal.js/theme/*.css` import in `Exlide/src/ui/deck-view.ts`.
 - How decks render and animate: `Exlide/src/ui/deck-view.ts`. Demo script: `Exlide/src/ui/demo.ts`.
 - Single-file build: the `inlineIntoHtml` plugin in `Exlide/vite.config.ts`.
+- Director behavior: `Exlide/src/core/director.ts`, the prompt in `Exlide/src/core/prompts.ts`, stability thresholds in `DEFAULT_STABILITY` (`Exlide/src/core/stability.ts`), transcript window and token budget in `DEFAULT_DIRECTOR_OPTIONS` (`director.ts`). Check every change with `npm run replay`.
+- Add an LLM provider: implement `LlmProvider` in `Exlide/src/adapters/llm/` (no key needed) or `Exlide/server/llm/` (needs a key), then add it to `Exlide/src/adapters/llm/index.ts` and `makeProvider` in `Exlide/scripts/replay.ts`.
+- Add a fixture: drop a `.txt` into `Exlide/fixtures/`. Replay and the tests pick it up automatically.
 
 `tsconfig.core.json` has no DOM or Node types, so any browser or Node API used in `src/core` fails typecheck. That is deliberate: it keeps the core portable.
 
 ## Providers
 
-Not chosen yet. The research step for the LLM (step 3) and STT (step 4) providers decides this. The defaults are free providers: the browser Web Speech API for speech and a local Ollama model for the director.
+Switch with `LLM_PROVIDER` / `LLM_MODEL` (and later `STT_PROVIDER`) in `Exlide/.env`. Copy `.env.example` to start.
+
+### Slide-director LLM (researched 2026-10-14; full notes in `logs.txt`)
+
+| Order | Provider | Cost | Your text used for training? | Notes |
+|---|---|---|---|---|
+| 1 (default) | **Ollama**, local, model `llama3.2:3b` | free, unlimited | no, it never leaves the machine | JSON-schema `format` (constrained decoding). Needs a few GB of RAM. Try `qwen3:4b` too and compare with replay. Use `DIRECTOR_INTERVAL_MS=6000`-`8000`. |
+| 2 | **Groq** free plan, `openai/gpt-oss-20b` | free, no card | no (Groq privacy page: no training, prompts not retained) | Strict `json_schema`. Docs show about 30 req/min and 1K req/day; your real free limits are in the Groq console. 1K/day is about 1-1.5 h of live talk at a 4-6 s tick. Goes through `server/` because it needs a key. |
+| 3 (paid, optional) | **Anthropic `claude-haiku-5-5`** | paid | no | Best quality. Wired up in step 5 with the proxy. Never Opus in the live loop. |
+
+Ruled out: Gemini free tier (Google no longer publishes the limits, reports say they were cut to about 20 req/day on some models, and outside the EEA/UK/CH free-tier data is used and human-reviewed), Cerebras (a 30-day $5 trial, not ongoing free), OpenRouter free models (about 50 req/day), Mistral free tier (requires opting in to training).
+
+Setting up Ollama: install from https://ollama.com, run `ollama pull llama3.2:3b`, and keep it running. The browser dev server (localhost) is on Ollama's default CORS allow-list. The Tauri window on Windows (`http://tauri.localhost`) is not, so step 6 handles that.
+
+### Speech-to-text
+
+Chosen in step 4. The planned default is the browser Web Speech API (free, Chrome/Edge).

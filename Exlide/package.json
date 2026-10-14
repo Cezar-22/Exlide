@@ -12,8 +12,8 @@
     "typecheck": "tsc -p tsconfig.core.json && tsc -p tsconfig.json && tsc -p tsconfig.node.json",
     "test": "vitest run",
     "test:watch": "vitest",
-    "replay": "node scripts/replay.ts",
-    "server": "node server/proxy.ts",
+    "replay": "node --env-file-if-exists=.env scripts/replay.ts",
+    "server": "node --env-file-if-exists=.env server/proxy.ts",
     "build": "vite build",
     "build:single": "vite build --mode single",
     "preview": "vite preview"

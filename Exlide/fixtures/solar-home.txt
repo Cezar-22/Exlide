@@ -1,0 +1,32 @@
+# Talk: "Solar power for a normal house", about 3.5 minutes, one speaker.
+# Topic shifts at ~0:50 (panels -> inverters), ~1:40 (batteries), ~2:30 (cost).
+# A steering note at 2:20 asks to skip ahead to cost.
+[00:00] Hi everyone, thanks for coming. Today I want to talk about putting solar panels on a normal house.
+[00:07] Not a big solar farm, just a regular family home like mine.
+[00:13] So first, the panels themselves. Most panels today are monocrystalline silicon.
+[00:20] A typical panel is around four hundred watts, and an average roof fits maybe ten to fifteen of them.
+[00:29] Orientation matters a lot. In Europe you want them facing south, at roughly a thirty degree angle.
+[00:37] Shade is the big enemy. Even one chimney shadow on one panel can drag down a whole string.
+[00:45] Um, yeah, so that's the panels.
+[00:50] Next part is the inverter, which is the box that nobody thinks about.
+[00:56] Panels produce direct current, but your house runs on alternating current, so the inverter converts it.
+[01:05] You can have one central string inverter, or small micro inverters behind every panel.
+[01:13] Micro inverters cost more, but they handle shade much better, because each panel works on its own.
+[01:22] The inverter is also usually the first thing that breaks. Expect to replace it after ten or fifteen years.
+[01:31] Okay. So, where was I. Right.
+[01:36] Batteries. This is the question everybody asks me.
+[01:41] The problem is that the sun shines at noon, but you use most of your power in the evening.
+[01:49] A home battery stores the midday surplus so you can use it after sunset.
+[01:56] A common size is around ten kilowatt hours, which covers an evening for most families.
+[02:04] Without a battery, you sell your surplus to the grid, usually for a lot less than you pay to buy it back.
+[02:12] Batteries are still expensive though, and they lose some capacity every year.
+[02:20] >> skip the battery chemistry, go to cost
+[02:24] Sorry, I was going to talk about battery chemistry, but let's go straight to cost.
+[02:31] For a ten panel system without a battery, I paid a bit under six thousand euros, installed.
+[02:39] Adding the battery roughly doubled that.
+[02:44] My electricity bill dropped by about sixty percent in the first year.
+[02:51] So the panels alone pay for themselves in about seven years in my case.
+[02:58] With the battery it's more like twelve years, so it's more about independence than money.
+[03:06] Also check for local subsidies, because in some regions they cover a big part of the cost.
+[03:14] So to sum up. Panels facing south, no shade, a decent inverter, and only get a battery if you care about independence.
+[03:24] Thanks, and I'm happy to take questions.

@@ -130,3 +130,55 @@ body {
 .empty[hidden] {
   display: none;
 }
+
+.steer-form {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+}
+
+.status {
+  flex: none;
+  max-width: 30%;
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 0.85rem;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* dev-only paste panel (?paste) */
+.paste-panel {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 40;
+  width: min(480px, calc(100% - 24px));
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: var(--panel);
+  color: var(--fg);
+  font-size: 0.9rem;
+}
+
+.paste-panel textarea {
+  box-sizing: border-box;
+  width: 100%;
+  margin: 8px 0;
+  padding: 8px;
+  border: 1px solid #2a2f3a;
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--fg);
+  font: inherit;
+}
+
+.paste-panel button {
+  padding: 6px 14px;
+  border: 0;
+  border-radius: 6px;
+  background: var(--accent);
+  color: #fff;
+  font: inherit;
+  cursor: pointer;
+}
