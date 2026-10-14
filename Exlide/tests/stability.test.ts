@@ -75,6 +75,18 @@ describe('applyStability', () => {
     expect(other.held[0]?.reason).toBe('steering note did not ask for remove_slide');
   });
 
+  it('strips bullets copied from other slides, and holds a new slide that is only copies', () => {
+    const two = applyOperation(deck, { op: 'add_slide', title: 'B', bullets: ['four'] }, 0);
+    const copy = applyStability([{ op: 'add_slide', title: 'C', bullets: ['One.', 'two'] }], two, 10_000, opts, null);
+    expect(copy.allowed).toEqual([]);
+    expect(copy.held[0]?.reason).toMatch(/only repeats/);
+    const mixed = applyStability([{ op: 'update_bullets', slide: 's2', bullets: ['four', 'three', 'five'] }], two, 10_000, opts, null);
+    expect(mixed.allowed).toEqual([{ op: 'update_bullets', slide: 's2', bullets: ['four', 'five'] }]);
+    // A recap asked for by the speaker may repeat bullets.
+    const recap = applyStability([{ op: 'add_slide', title: 'Recap', bullets: ['one', 'four'] }], two, 100, opts, 'recap on one slide');
+    expect(recap.allowed).toHaveLength(1);
+  });
+
   it('drops no_change from the result', () => {
     expect(applyStability([{ op: 'no_change' }], deck, 10_000, opts, null)).toEqual({ allowed: [], held: [] });
   });

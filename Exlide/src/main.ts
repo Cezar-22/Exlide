@@ -1,10 +1,13 @@
 import { createLlmProvider } from './adapters/llm/index.ts';
 import { createSttProvider } from './adapters/stt/index.ts';
+import { isSttErrorCode } from './adapters/stt/webspeech.ts';
 import { readConfig, type AppConfig } from './config.ts';
 import { emptyDeck, type DeckState } from './core/deck.ts';
+import { langOf } from './core/language.ts';
 import { micCheckEvent, micCheckHint, micCheckLevel, micCheckResult, newMicCheck } from './core/mic-check.ts';
 import { applyOperations } from './core/reducer.ts';
 import { validateOperations } from './core/schema.ts';
+import { strings, type Strings } from './i18n.ts';
 import { applySettings, browserStore, defaultSettings, loadSettings, saveSettings } from './settings.ts';
 import { CaptionBar } from './ui/caption.ts';
 import { createConsoleDebugLogger } from './ui/debug-console.ts';
@@ -13,7 +16,7 @@ import { DEMO_OPERATIONS } from './ui/demo.ts';
 import { mountLanding } from './ui/landing.ts';
 import { startMicLevel, type MicLevel } from './ui/mic-level.ts';
 import { mountPastePanel } from './ui/paste-panel.ts';
-import { Session } from './ui/session.ts';
+import { Session, type SessionStatus } from './ui/session.ts';
 import './ui/styles.css';
 
 const baseConfig = readConfig(__EXLIDE_ENV__);
@@ -44,9 +47,22 @@ const setStatus = (text: string) => {
   status.textContent = text;
 };
 
+/** Puts the presentation controls into the lesson language. */
+function applyPresentationText(t: Strings): void {
+  requireElement('.mic', HTMLButtonElement).textContent = t.mic;
+  steerInput.placeholder = t.steerPlaceholder;
+  document.documentElement.lang = t.htmlLang;
+}
+
+function statusText(t: Strings, s: SessionStatus): string {
+  if (s.kind === 'llm-unreachable') return s.local ? t.noSlidesLocal : t.noSlidesRemote(s.provider);
+  return t.stats(s.provider, s.calls, s.changes);
+}
+
 /** Builds the slide view. reveal.js needs a visible container, so call this once #app is shown. */
-async function createView(): Promise<{ view: DeckView; caption: CaptionBar }> {
-  const view = new DeckView(stage); // clears the stage, so create it before the caption
+async function createView(t: Strings): Promise<{ view: DeckView; caption: CaptionBar }> {
+  applyPresentationText(t);
+  const view = new DeckView(stage, t.emptyDeck); // clears the stage, so create it before the caption
   await view.init();
   return { view, caption: new CaptionBar(stage) };
 }
@@ -63,14 +79,15 @@ async function playDemo(view: DeckView, stepMs: number): Promise<void> {
   }
 }
 
-function startSession(config: AppConfig, view: DeckView): Session | null {
+function startSession(config: AppConfig, view: DeckView, t: Strings): Session | null {
   try {
     const session = new Session({
       llm: createLlmProvider(config),
       view,
       logger: debug,
       intervalMs: config.directorIntervalMs,
-      onStatus: setStatus,
+      language: langOf(config.sttLang),
+      onStatus: (s) => setStatus(statusText(t, s)),
     });
     steerInput.disabled = false;
     steerForm.addEventListener('submit', (event) => {
@@ -79,7 +96,7 @@ function startSession(config: AppConfig, view: DeckView): Session | null {
       if (note === '') return;
       session.steer(note);
       steerInput.value = '';
-      setStatus(`Steering: "${note}"`);
+      setStatus(t.steering(note));
     });
     return session;
   } catch (error) {
@@ -89,7 +106,7 @@ function startSession(config: AppConfig, view: DeckView): Session | null {
 }
 
 /** Live mode: the mic button toggles speech recognition and the director. Returns the toggle. */
-function mountMic(config: AppConfig, session: Session, caption: CaptionBar): () => Promise<void> {
+function mountMic(config: AppConfig, session: Session, caption: CaptionBar, t: Strings): () => Promise<void> {
   const mic = requireElement('.mic', HTMLButtonElement);
   let check = newMicCheck(Date.now());
   let checkTimer: ReturnType<typeof setInterval> | null = null;
@@ -107,14 +124,14 @@ function mountMic(config: AppConfig, session: Session, caption: CaptionBar): () 
   const setOn = (value: boolean) => {
     on = value;
     mic.setAttribute('aria-pressed', String(value));
-    mic.textContent = value ? 'Stop' : 'Mic';
+    mic.textContent = value ? t.stop : t.mic;
     if (checkTimer !== null) clearInterval(checkTimer);
     checkTimer = null;
     if (value) {
       check = newMicCheck(Date.now());
       checkTimer = setInterval(() => {
         const hint = micCheckHint(check, Date.now());
-        if (hint !== null) caption.hint(hint);
+        if (hint !== null) caption.hint(t.micHints[hint]);
       }, 1000);
     } else {
       level?.stop();
@@ -131,10 +148,10 @@ function mountMic(config: AppConfig, session: Session, caption: CaptionBar): () 
   stt.onStateChange((state, detail) => {
     debug.log('stt.state', { state, detail });
     if (state === 'error') {
-      caption.hint(detail ?? 'Speech recognition error');
+      caption.hint(isSttErrorCode(detail) ? t.sttErrors[detail] : t.sttErrors['start-failed']);
       stt.stop();
       setOn(false);
-      setStatus('Mic off. Press Mic to try again.');
+      setStatus(t.micOffRetry);
     }
   });
 
@@ -143,14 +160,14 @@ function mountMic(config: AppConfig, session: Session, caption: CaptionBar): () 
       stt.stop();
       setOn(false);
       caption.clear();
-      setStatus('Mic off');
+      setStatus(t.micOff);
       return;
     }
     try {
       level = await startMicLevel(setLevel); // also triggers the permission prompt
-      setStatus(`Listening on: ${level.deviceLabel}`);
+      setStatus(t.listeningOn(level.deviceLabel));
     } catch (error) {
-      caption.hint(`Microphone unavailable: ${error instanceof Error ? error.message : String(error)}`);
+      caption.hint(t.micUnavailable(error instanceof Error ? error.message : String(error)));
       return;
     }
     setOn(true);
@@ -159,7 +176,7 @@ function mountMic(config: AppConfig, session: Session, caption: CaptionBar): () 
   };
 
   if (!stt.isSupported()) {
-    caption.hint('Speech recognition needs Chrome or Edge.');
+    caption.hint(t.sttErrors.unsupported);
     return () => Promise.resolve();
   }
   mic.disabled = false;
@@ -168,12 +185,14 @@ function mountMic(config: AppConfig, session: Session, caption: CaptionBar): () 
 }
 
 const params = new URLSearchParams(location.search);
+const envStrings = strings(langOf(settings.sttLang));
 if (params.has('demo')) {
-  const { view } = await createView();
+  const { view } = await createView(envStrings);
   void playDemo(view, Number(params.get('demo')) || 2000);
 } else if (params.has('paste')) {
-  const { view } = await createView();
-  const session = startSession(baseConfig, view);
+  const pasteConfig = applySettings(baseConfig, settings);
+  const { view } = await createView(envStrings);
+  const session = startSession(pasteConfig, view, envStrings);
   if (session) mountPastePanel(stage, session, Number(params.get('paste')) || 1);
 } else {
   // Normal use: landing page first; Start opens the presentation and turns the mic on.
@@ -190,12 +209,13 @@ if (params.has('demo')) {
       if (started) return;
       started = true;
       const config = applySettings(baseConfig, settings);
+      const t = strings(langOf(config.sttLang));
       root.hidden = false;
-      const { view, caption } = await createView();
-      const session = startSession(config, view);
+      const { view, caption } = await createView(t);
+      const session = startSession(config, view, t);
       landing.hide();
       if (!session) return;
-      const startMic = mountMic(config, session, caption);
+      const startMic = mountMic(config, session, caption, t);
       await startMic(); // same click as Start, so the mic permission prompt appears right away
     },
   });

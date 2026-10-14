@@ -1,0 +1,21 @@
+# Lecție: legile lui Newton, fizică, liceu, aproximativ 3 minute. Limba română.
+# lang: ro-RO
+[00:00] Bună ziua. Astăzi începem cele trei legi ale lui Newton.
+[00:06] Prima lege se mai numește și principiul inerției.
+[00:11] Un corp rămâne în repaus sau se mișcă rectiliniu uniform dacă asupra lui nu acționează nicio forță rezultantă.
+[00:21] De aceea, când autobuzul frânează brusc, voi sunteți împinși în față. Corpul vrea să se miște în continuare.
+[00:30] A doua lege leagă forța, masa și accelerația. Ef egal em ori a.
+[00:38] Forța se măsoară în newtoni, masa în kilograme, iar accelerația în metri pe secundă la pătrat.
+[00:46] Exemplu. Un cărucior de 2 kilograme are o accelerație de 3 metri pe secundă la pătrat.
+[00:54] Forța este 2 ori 3, adică 6 newtoni.
+[01:00] Dacă dublăm masa și păstrăm aceeași forță, accelerația se înjumătățește.
+[01:08] Așa, stați puțin să iau telecomanda. Gata.
+[01:14] A treia lege, principiul acțiunii și reacțiunii.
+[01:21] Când împingi un perete, peretele te împinge înapoi cu aceeași forță.
+[01:28] O rachetă împinge gazele în jos, iar gazele împing racheta în sus. Așa zboară și în spațiu.
+[01:39] Atenție: acțiunea și reacțiunea acționează asupra unor corpuri diferite, deci nu se anulează.
+[01:47] >> recapitulează cele trei legi pe un singur slide
+[01:50] Deci, pe scurt: inerția, ef egal em ori a, și acțiunea egală cu reacțiunea.
+[01:57] Data viitoare discutăm despre frecare și cum intră ea în a doua lege.
+[02:04] Ca temă, calculați forța necesară ca să accelerați o mașină de 1500 de kilograme cu 2 metri pe secundă la pătrat.
+[02:13] Răspunsul trebuie să fie 3000 de newtoni. Verificați unitățile de măsură.

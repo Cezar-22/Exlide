@@ -14,7 +14,7 @@ describe('mic check', () => {
   it('flags a recognizer that never got the microphone', () => {
     const s = newMicCheck(0);
     expect(micCheckHint(s, 4000)).toBeNull();
-    expect(micCheckHint(s, 6000)).toMatch(/did not get the microphone/);
+    expect(micCheckHint(s, 6000)).toBe('no-mic-access');
   });
 
   it('flags sound without words after 8 s', () => {
@@ -24,11 +24,11 @@ describe('mic check', () => {
     s = micCheckLevel(s, 0.3, 1000);
     s = micCheckLevel(s, 0.3, 2000); // keeps the first loud moment
     expect(micCheckHint(s, 8999)).toBeNull();
-    expect(micCheckHint(s, 9001)).toMatch(/picks up sound but no words/);
+    expect(micCheckHint(s, 9001)).toBe('sound-no-words');
   });
 
   it('reports network errors right away', () => {
     const s = micCheckEvent(micCheckEvent(newMicCheck(0), 'audiostart'), 'error:network');
-    expect(micCheckHint(s, 100)).toMatch(/internet/);
+    expect(micCheckHint(s, 100)).toBe('network');
   });
 });

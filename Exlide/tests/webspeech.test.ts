@@ -88,7 +88,7 @@ describe('WebSpeechProvider', () => {
     instances[0]!.onend?.();
     vi.runAllTimers();
     expect(instances).toHaveLength(1);
-    expect(states.at(-1)).toMatch(/^error:Microphone permission denied/);
+    expect(states.at(-1)).toBe('error:not-allowed');
   });
 
   it('backs off on network errors and gives up after five in a row', async () => {
@@ -102,6 +102,6 @@ describe('WebSpeechProvider', () => {
       vi.runAllTimers();
     }
     expect(instances).toHaveLength(5);
-    expect(states.at(-1)).toMatch(/^error:Speech service unreachable/);
+    expect(states.at(-1)).toBe('error:network');
   });
 });

@@ -3,6 +3,7 @@
 // costs latency.
 
 import { LIMITS, type DeckState } from './deck.ts';
+import type { Lang } from './language.ts';
 
 export const DIRECTOR_SYSTEM_PROMPT = `You direct a live slide deck while a speaker talks. Each turn you get the deck and the latest transcript. Reply with JSON only, in the form {"operations":[...]}.
 
@@ -18,11 +19,11 @@ Rules:
 - Default to no_change. Change the deck only when the NEW WORDS add something worth showing. EARLIER text is already on the deck or was skipped on purpose.
 - Add a slide only when the topic has clearly moved on. Otherwise add a bullet to the current slide.
 - When updating, keep the existing bullets and append. Do not reword them.
-- At most ${LIMITS.maxBullets} bullets per slide, each under 10 words. Titles under 7 words.
-- A slide marked "full" takes no more bullets. If the speaker goes on, add a new slide with a different, more specific title.
+- At most ${LIMITS.maxBullets} bullets per slide. Bullets are short phrases of 3 to 8 words, not full sentences. Titles under 7 words.
+- "room" is how many bullets a slide can still take. A slide with room 0 is full: for a new point, add a new slide with a different, more specific title. Never rewrite a full slide to make space.
 - Never reuse an existing slide title. Never repeat a bullet that is already on the deck.
 - Use remove_slide and reorder only when a STEERING note asks for it. Never delete a slide to make room.
-- Use only what the speaker said. Never invent facts, numbers or names.
+- Use only what the speaker said. Never invent facts, numbers or names. Every number and result on a slide must appear in the speaker's words.
 - A STEERING note is a direct instruction from the speaker. Follow it now.
 
 The speaker is usually a teacher (math, physics, computer science):
@@ -42,7 +43,15 @@ export interface DirectorPromptInput {
   latest: string;
   summary: string;
   steering: string | null;
+  /** Lesson language: slides are written in it. */
+  language: Lang;
 }
+
+// Extra rules for non-English lessons. English needs none (keeps the prompt short).
+const LANGUAGE_RULES: Record<Lang, string | null> = {
+  en: null,
+  ro: 'LANGUAGE: The lesson is in Romanian. Write every title and bullet in Romanian with correct spelling and diacritics (ă, â, î, ș, ț). Short phrases, e.g. "Ipotenuza: latura opusă unghiului drept", "Exemplu: catete 3 și 4 → ipotenuza 5". Romanian speech slips to fix: "a la pătrat" → a², "x la a treia" → x³, "radical din doi" → √2, "radical din delta x la pătrat plus delta y la pătrat" → √(Δx² + Δy²), "pi" (only when the speaker says it) → π, "delta x" → Δx, "o mare de n" → O(n), "ef egal em ori a" → F = m·a.',
+};
 
 /** Compact deck description the model can reference slide ids from. */
 export function describeDeck(deck: DeckState): string {
@@ -52,13 +61,15 @@ export function describeDeck(deck: DeckState): string {
       id: s.id,
       title: s.title,
       bullets: s.bullets,
-      ...(s.bullets.length >= LIMITS.maxBullets ? { full: true } : {}),
+      room: Math.max(0, LIMITS.maxBullets - s.bullets.length),
     })),
   });
 }
 
 export function buildDirectorUserPrompt(input: DirectorPromptInput): string {
   const lines = [`DECK: ${describeDeck(input.deck)}`];
+  const languageRule = LANGUAGE_RULES[input.language];
+  if (languageRule !== null) lines.unshift(languageRule);
   if (input.summary !== '') lines.push(`COVERED SO FAR: ${input.summary}`);
   if (input.earlier !== '') lines.push(`EARLIER (already handled, context only): ${JSON.stringify(input.earlier)}`);
   lines.push(`NEW WORDS (since your last update): ${JSON.stringify(input.latest)}`);

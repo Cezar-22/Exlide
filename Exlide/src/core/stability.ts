@@ -55,6 +55,25 @@ function structuralAllowed(op: Operation, steering: string | null): boolean {
   return true;
 }
 
+const normalize = (bullet: string) => bullet.toLowerCase().replace(/[\s.,;:!]+$/u, '').trim();
+
+/**
+ * Drops bullets that are already on another slide (weak models copy whole
+ * bullet lists onto the next slide). Returns null when an add_slide was
+ * nothing but copies. A steering note (e.g. "recap...") skips this.
+ */
+function withoutRepeats(op: Operation, deck: DeckState): Operation | null {
+  if (op.op !== 'add_slide' && op.op !== 'update_bullets') return op;
+  const own = op.op === 'update_bullets' ? op.slide : null;
+  const elsewhere = new Set(
+    deck.slides.filter((s) => s.id !== own).flatMap((s) => s.bullets.map(normalize)),
+  );
+  const bullets = op.bullets.filter((b) => !elsewhere.has(normalize(b)));
+  if (bullets.length === op.bullets.length) return op;
+  if (op.op === 'add_slide' && bullets.length === 0 && op.bullets.length > 0) return null;
+  return { ...op, bullets };
+}
+
 export function applyStability(
   ops: readonly Operation[],
   deck: DeckState,
@@ -79,7 +98,12 @@ export function applyStability(
   }
 
   let adds = 0;
-  for (const op of changes) {
+  for (const original of changes) {
+    const op = withoutRepeats(original, deck);
+    if (op === null) {
+      result.held.push({ op: original, reason: 'new slide only repeats bullets from other slides' });
+      continue;
+    }
     if (holdStructural(op)) {
       result.held.push({ op, reason: `${op.op} only on a steering note` });
       continue;

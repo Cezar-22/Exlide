@@ -17,6 +17,12 @@ export interface FixtureEvent {
 const WORDS_PER_SECOND = 2.5;
 const STAMP = /^\[(\d+):(\d{1,2})(?:\.(\d+))?\]\s*(.*)$/;
 
+/** Reads an optional "# lang: ro-RO" header line (default en-US). */
+export function fixtureLanguageCode(source: string): string {
+  const match = /^#\s*lang:\s*([A-Za-z]{2,3}(?:-[A-Za-z]{2})?)\s*$/im.exec(source);
+  return match?.[1] ?? 'en-US';
+}
+
 export function speakingTimeMs(text: string): number {
   const words = text.split(/\s+/).filter(Boolean).length;
   return Math.max(800, Math.round((words / WORDS_PER_SECOND) * 1000));

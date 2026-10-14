@@ -34,12 +34,24 @@ export function findRecognitionCtor(scope: object): RecognitionCtor | null {
   return typeof ctor === 'function' ? (ctor as RecognitionCtor) : null;
 }
 
-const FATAL: Record<string, string> = {
-  'not-allowed': 'Microphone permission denied. Allow it in the browser address bar.',
-  'service-not-allowed': 'Speech recognition is blocked in this browser. Use Chrome or Edge.',
-  'audio-capture': 'No microphone found. Check that one is connected and set as the default input.',
-  'language-not-supported': 'This speech language is not supported.',
-};
+/**
+ * Error codes reported as the `detail` of the 'error' state. The UI turns
+ * them into text in the lesson language.
+ */
+export type SttErrorCode =
+  | 'unsupported'
+  | 'not-allowed'
+  | 'service-not-allowed'
+  | 'audio-capture'
+  | 'language-not-supported'
+  | 'network'
+  | 'start-failed';
+
+const FATAL: ReadonlySet<string> = new Set(['not-allowed', 'service-not-allowed', 'audio-capture', 'language-not-supported']);
+
+export function isSttErrorCode(value: string | undefined): value is SttErrorCode {
+  return value !== undefined && (FATAL.has(value) || ['unsupported', 'network', 'start-failed'].includes(value));
+}
 
 export class WebSpeechProvider implements SttProvider {
   readonly name = 'webspeech';
@@ -72,7 +84,7 @@ export class WebSpeechProvider implements SttProvider {
 
   start(): Promise<void> {
     if (!this.ctor) {
-      this.setState('error', 'Speech recognition needs Chrome or Edge.');
+      this.setState('error', 'unsupported');
       return Promise.resolve();
     }
     this.wanted = true;
@@ -119,10 +131,9 @@ export class WebSpeechProvider implements SttProvider {
     rec.onspeechstart = () => this.onDebug('speechstart');
     rec.onerror = (event) => {
       this.onDebug(`error:${event.error}`);
-      const fatal = FATAL[event.error];
-      if (fatal) {
+      if (FATAL.has(event.error)) {
         this.wanted = false;
-        this.setState('error', fatal);
+        this.setState('error', event.error);
       } else if (event.error === 'network') {
         this.failures += 1;
       }
@@ -133,7 +144,7 @@ export class WebSpeechProvider implements SttProvider {
       if (this.recognition !== rec || !this.wanted) return;
       if (this.failures >= 5) {
         this.wanted = false;
-        this.setState('error', 'Speech service unreachable. Check the internet connection.');
+        this.setState('error', 'network');
         return;
       }
       // Back off after network errors, otherwise restart at once so no words are lost.
@@ -144,7 +155,8 @@ export class WebSpeechProvider implements SttProvider {
       rec.start();
       this.setState('listening');
     } catch (error) {
-      this.setState('error', error instanceof Error ? error.message : String(error));
+      this.onDebug(`start-failed:${error instanceof Error ? error.message : String(error)}`);
+      this.setState('error', 'start-failed');
     }
   }
 

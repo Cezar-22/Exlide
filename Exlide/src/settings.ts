@@ -4,9 +4,10 @@
 // guarded and the app works without it.
 
 import type { AppConfig } from './config.ts';
+import { isSupportedLanguageCode, langOf, languageOption } from './core/language.ts';
 
 export interface UserSettings {
-  /** Speech language, BCP-47. */
+  /** Lesson language as a BCP-47 code (en-US or ro-RO): speech, slides and app text. */
   sttLang: string;
   /** How often the director looks at new speech. */
   directorIntervalMs: number;
@@ -21,24 +22,20 @@ export interface KeyValueStore {
 
 export const SETTINGS_KEY = 'exlide.settings.v1';
 
-export const LANGUAGES: ReadonlyArray<{ code: string; label: string }> = [
-  { code: 'en-US', label: 'English (US)' },
-  { code: 'en-GB', label: 'English (UK)' },
-  { code: 'ro-RO', label: 'Română' },
-  { code: 'de-DE', label: 'Deutsch' },
-  { code: 'fr-FR', label: 'Français' },
-  { code: 'es-ES', label: 'Español' },
-  { code: 'it-IT', label: 'Italiano' },
+/** Update-speed choices; labels live in i18n.ts. */
+export const SPEEDS: ReadonlyArray<{ ms: number; key: 'speedFast' | 'speedNormal' | 'speedCalm' }> = [
+  { ms: 4000, key: 'speedFast' },
+  { ms: 6000, key: 'speedNormal' },
+  { ms: 8000, key: 'speedCalm' },
 ];
 
-export const SPEEDS: ReadonlyArray<{ ms: number; label: string }> = [
-  { ms: 4000, label: 'Fast (4 s)' },
-  { ms: 6000, label: 'Normal (6 s)' },
-  { ms: 8000, label: 'Calm (8 s)' },
-];
+/** Any language code becomes a supported one (e.g. en-GB from .env -> en-US). */
+function supportedCode(code: string): string {
+  return isSupportedLanguageCode(code) ? code : languageOption(langOf(code)).code;
+}
 
 export function defaultSettings(config: AppConfig): UserSettings {
-  return { sttLang: config.sttLang, directorIntervalMs: config.directorIntervalMs, llmModel: config.llmModel };
+  return { sttLang: supportedCode(config.sttLang), directorIntervalMs: config.directorIntervalMs, llmModel: config.llmModel };
 }
 
 /** Reads saved settings, ignoring anything missing, malformed or out of range. */
@@ -55,7 +52,7 @@ export function loadSettings(store: KeyValueStore | null, defaults: UserSettings
   const interval: unknown = Reflect.get(raw, 'directorIntervalMs');
   const model: unknown = Reflect.get(raw, 'llmModel');
   return {
-    sttLang: typeof lang === 'string' && /^[a-z]{2,3}(-[A-Z]{2})?$/.test(lang) ? lang : defaults.sttLang,
+    sttLang: typeof lang === 'string' && isSupportedLanguageCode(lang) ? lang : defaults.sttLang,
     directorIntervalMs:
       typeof interval === 'number' && interval >= 2000 && interval <= 30_000 ? interval : defaults.directorIntervalMs,
     llmModel: typeof model === 'string' && /^[\w.:/-]{0,80}$/.test(model) ? model : defaults.llmModel,

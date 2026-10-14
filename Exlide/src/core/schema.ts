@@ -60,7 +60,9 @@ function readBullets(fields: Fields): Result<string[]> {
     }
     bullets.push(text);
   }
-  if (bullets.length > LIMITS.maxBullets) return fail(`more than ${LIMITS.maxBullets} bullets`);
+  if (bullets.length > LIMITS.maxBullets) {
+    return fail(`more than ${LIMITS.maxBullets} bullets (the slide is full: put the new point on a new slide with add_slide)`);
+  }
   return ok(bullets);
 }
 

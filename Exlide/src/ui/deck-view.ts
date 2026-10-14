@@ -19,7 +19,7 @@ export class DeckView {
   private reveal: RevealApi | null = null;
   private rendered: DeckState | null = null;
 
-  constructor(container: HTMLElement) {
+  constructor(container: HTMLElement, emptyText: string) {
     this.root = document.createElement('div');
     this.root.className = 'reveal';
     this.slidesEl = document.createElement('div');
@@ -27,7 +27,7 @@ export class DeckView {
     this.root.append(this.slidesEl);
     this.emptyEl = document.createElement('p');
     this.emptyEl.className = 'empty';
-    this.emptyEl.textContent = 'Start talking. Slides will appear here.';
+    this.emptyEl.textContent = emptyText;
     container.replaceChildren(this.root, this.emptyEl);
   }
 

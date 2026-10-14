@@ -4,6 +4,7 @@
 // Timing (when to tick) is driven from outside so this stays platform-free.
 
 import type { DebugLogger } from './debug.ts';
+import type { Lang } from './language.ts';
 import { emptyDeck, type DeckState } from './deck.ts';
 import { DIRECTOR_REPLY_SCHEMA } from './json-schema.ts';
 import type { Operation } from './operations.ts';
@@ -23,6 +24,8 @@ export interface DirectorOptions {
   stability: StabilityOptions;
   /** Characters of recent transcript sent per call. Small = fewer tokens, less latency. */
   maxTranscriptChars: number;
+  /** Lesson language; slides are written in it. */
+  language: Lang;
   temperature: number;
   maxTokens: number;
   timeoutMs: number;
@@ -31,6 +34,7 @@ export interface DirectorOptions {
 export const DEFAULT_DIRECTOR_OPTIONS: DirectorOptions = {
   stability: DEFAULT_STABILITY,
   maxTranscriptChars: 1200,
+  language: 'en',
   temperature: 0.2,
   maxTokens: 500,
   timeoutMs: 20_000,
@@ -195,6 +199,7 @@ export class Director {
       latest,
       summary: transcript.summary,
       steering,
+      language: this.options.language,
     });
 
     let attempt = await this.attempt(userPrompt, deckAtCall);

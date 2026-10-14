@@ -12,7 +12,8 @@ import { parseArgs } from 'node:util';
 import { MockLlmProvider } from '../src/adapters/llm/mock.ts';
 import { OllamaProvider } from '../src/adapters/llm/ollama.ts';
 import { createDebugLogger, silentLogger } from '../src/core/debug.ts';
-import { parseFixture } from '../src/core/fixture.ts';
+import { fixtureLanguageCode, parseFixture } from '../src/core/fixture.ts';
+import { langOf } from '../src/core/language.ts';
 import type { LlmProvider } from '../src/core/providers.ts';
 import { runReplay, type ReplayReport } from '../src/core/replay.ts';
 import { GROQ_DEFAULTS, OpenAiCompatibleProvider } from '../server/llm/openai-compatible.ts';
@@ -92,10 +93,12 @@ async function main(): Promise<void> {
 
   const reports: Array<{ fixture: string; report: ReplayReport }> = [];
   for (const file of fixtures) {
-    const report = await runReplay(parseFixture(readFileSync(file, 'utf8')), llm, logger, {
+    const source = readFileSync(file, 'utf8');
+    const report = await runReplay(parseFixture(source), llm, logger, {
       intervalMs,
       simulateLatency: !values['no-latency'],
       tailMs: 3 * intervalMs,
+      director: { language: langOf(fixtureLanguageCode(source)) },
     });
     reports.push({ fixture: basename(file), report });
     if (!values.json) printReport(basename(file), report);

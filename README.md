@@ -65,6 +65,12 @@ Landing page (user's design, "web interface v1"):
 - The design came from a Lovable project (React, Tailwind, TanStack Start). It was ported 1:1 to plain TypeScript + CSS (`Exlide/src/ui/landing.ts`, `landing.css`) instead of adding React and ~60 packages. The original folder `web interface v1/` is left untouched and kept out of git (`.git/info/exclude`). Logo: `Exlide/src/assets/exlide-logo.png`. Fonts: Manrope + Sora from Google Fonts.
 - `?demo` and `?paste` skip the landing page.
 
+Languages (English and Romanian):
+- **Settings → Language / Limba** (the first setting) chooses the lesson language. One choice sets three things: speech recognition (`en-US` / `ro-RO`), the language the slides are written in, and all app text (landing page, Info, Settings, buttons, mic hints, errors).
+- Interface text: `Exlide/src/i18n.ts` (TypeScript rejects a language with missing text). Languages: `Exlide/src/core/language.ts`. Romanian slide rules (diacritics, short phrases, Romanian speech slips like "a la pătrat" → a²): `LANGUAGE_RULES` in `Exlide/src/core/prompts.ts`.
+- Romanian lesson fixtures: `ro-matematica-pitagora.txt`, `ro-fizica-newton.txt`. A `# lang: ro-RO` line in a fixture makes replay run it as a Romanian lesson.
+- Measured with `llama3.1:8b` (2026-10-14): 87-88% of the model's operations valid in Romanian, 84-88% in English, about 1 s per update. Romanian slides are correct and readable but not perfect: some bullets land on the wrong slide or stay long. A larger multilingual model might do better, not tested yet.
+
 Still missing: speech input inside Tauri (step 4), live loop and proxy (step 5), Tauri packaging (step 6).
 
 ## Run
@@ -126,6 +132,7 @@ Fixture format (`Exlide/src/core/fixture.ts`): `[mm:ss] spoken text`, `[mm:ss] >
 - Slide limits (bullets, lengths): `LIMITS` in `Exlide/src/core/deck.ts`.
 - Which env vars the browser can see: `PUBLIC_ENV` in `Exlide/vite.config.ts`. Never add a key there.
 - App config defaults: `Exlide/src/config.ts`.
+- Add a language: add it to `LANGUAGE_OPTIONS` in `Exlide/src/core/language.ts`, a full `Strings` entry in `Exlide/src/i18n.ts`, a `LANGUAGE_RULES` entry in `Exlide/src/core/prompts.ts`, and a fixture with `# lang:` to test it.
 - Landing page: `Exlide/src/ui/landing.ts` (markup, Info text, Settings form) and `Exlide/src/ui/landing.css` (design tokens at the top). Settings fields and their validation: `Exlide/src/settings.ts`.
 - UI look: `Exlide/src/ui/styles.css`. reveal.js theme: the `reveal.js/theme/*.css` import in `Exlide/src/ui/deck-view.ts`.
 - How decks render and animate: `Exlide/src/ui/deck-view.ts`. Demo script: `Exlide/src/ui/demo.ts`.

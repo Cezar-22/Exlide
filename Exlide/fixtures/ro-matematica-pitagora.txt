@@ -1,0 +1,21 @@
+# Lecție: teorema lui Pitagora, clasa a VII-a, aproximativ 3 minute. Limba română.
+# lang: ro-RO
+[00:00] Bună dimineața, copii. Astăzi vorbim despre triunghiul dreptunghic și teorema lui Pitagora.
+[00:07] Un triunghi dreptunghic este un triunghi care are un unghi de exact 90 de grade.
+[00:14] Latura cea mai lungă, opusă unghiului drept, se numește ipotenuză. Celelalte două laturi se numesc catete.
+[00:23] Teorema spune așa: a la pătrat plus b la pătrat este egal cu c la pătrat, unde c este ipotenuza.
+[00:32] Hai să facem un exemplu. Catetele au 3 și 4 centimetri.
+[00:38] 3 la pătrat este 9, 4 la pătrat este 16, iar 9 plus 16 face 25.
+[00:46] Radical din 25 este 5, deci ipotenuza are 5 centimetri.
+[00:54] Bun, e clar până aici? Așa.
+[01:00] Unde folosim asta în viața reală? Constructorii o folosesc ca să verifice dacă un colț este drept.
+[01:08] Măsoară 3 metri pe un perete, 4 metri pe celălalt, iar diagonala trebuie să fie 5 metri.
+[01:17] Tot cu teorema lui Pitagora calculăm și distanța dintre două puncte pe grafic.
+[01:24] Distanța este radical din delta x la pătrat plus delta y la pătrat.
+[01:33] Pentru punctele 1 virgulă 2 și 4 virgulă 6, delta x este 3 și delta y este 4, deci distanța este tot 5.
+[01:45] >> adaugă un slide cu un exercițiu
+[01:48] Acum un exercițiu pentru voi: catetele sunt 5 și 12. Cât este ipotenuza?
+[01:56] Aveți două minute. Răspunsul este 13, pentru că 25 plus 144 face 169.
+[02:08] La final, reciproca teoremei. Dacă a la pătrat plus b la pătrat este egal cu c la pătrat, atunci triunghiul este dreptunghic.
+[02:18] Deci o putem folosi ca să verificăm dacă un unghi are 90 de grade.
+[02:25] Ca temă, pagina 42, exercițiile de la 1 la 8. Ne vedem joi.

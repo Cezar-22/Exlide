@@ -4,16 +4,23 @@
 
 import type { DebugLogger } from '../core/debug.ts';
 import { Director } from '../core/director.ts';
+import type { Lang } from '../core/language.ts';
 import type { LlmProvider, TranscriptSegment } from '../core/providers.ts';
 import { TranscriptBuffer } from '../core/transcript.ts';
 import type { DeckView } from './deck-view.ts';
+
+/** What the session reports; the UI turns it into text in the lesson language. */
+export type SessionStatus =
+  | { kind: 'llm-unreachable'; provider: string; local: boolean }
+  | { kind: 'stats'; provider: string; calls: number; changes: number };
 
 export interface SessionOptions {
   llm: LlmProvider;
   view: DeckView;
   logger: DebugLogger;
   intervalMs: number;
-  onStatus: (text: string) => void;
+  language: Lang;
+  onStatus: (status: SessionStatus) => void;
 }
 
 export class Session {
@@ -29,7 +36,7 @@ export class Session {
       transcript: this.transcript,
       clock: () => Date.now(),
       logger: options.logger,
-      options: { timeoutMs: Math.max(15_000, options.intervalMs * 3) },
+      options: { timeoutMs: Math.max(15_000, options.intervalMs * 3), language: options.language },
     });
     this.director.onDeckChange((deck) => options.view.render(deck));
   }
@@ -58,15 +65,11 @@ export class Session {
   private async tick(): Promise<void> {
     const outcome = await this.director.tick();
     const { stats } = this.director;
+    const provider = this.options.llm.name;
     if (outcome === 'error') {
-      const local = this.options.llm.name.startsWith('ollama');
-      this.options.onStatus(
-        local
-          ? 'No slides yet: the AI model (Ollama) is not running. See README, "Providers".'
-          : `No slides yet: ${this.options.llm.name} is not reachable. Retrying.`,
-      );
+      this.options.onStatus({ kind: 'llm-unreachable', provider, local: provider.startsWith('ollama') });
     } else if (outcome !== 'skipped-busy' && outcome !== 'skipped-idle') {
-      this.options.onStatus(`${this.options.llm.name}: ${stats.calls} calls, ${stats.appliedOps} changes`);
+      this.options.onStatus({ kind: 'stats', provider, calls: stats.calls, changes: stats.appliedOps });
     }
   }
 }

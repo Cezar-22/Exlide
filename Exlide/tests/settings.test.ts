@@ -39,6 +39,13 @@ describe('settings', () => {
     expect(loadSettings(memoryStore({ [SETTINGS_KEY]: '{oops' }), defaults)).toEqual(defaults);
   });
 
+  it('only keeps English or Romanian, and maps other codes from .env', () => {
+    const store = memoryStore({ [SETTINGS_KEY]: JSON.stringify({ sttLang: 'de-DE' }) });
+    expect(loadSettings(store, defaults).sttLang).toBe('en-US');
+    expect(defaultSettings(readConfig({ STT_LANG: 'en-GB' })).sttLang).toBe('en-US');
+    expect(defaultSettings(readConfig({ STT_LANG: 'ro' })).sttLang).toBe('ro-RO');
+  });
+
   it('works when storage is missing or throws', () => {
     const throwing: KeyValueStore = {
       getItem: () => {
