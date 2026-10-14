@@ -30,7 +30,13 @@ Step 0 (scaffold) only:
 - Config read from whitelisted env vars (`Exlide/src/config.ts`, `Exlide/vite.config.ts`). API keys never reach the client.
 - A UI shell with the mic button, steering input and slide area. None of it is wired up yet.
 
-Still missing: deck model and reducer (step 1), reveal.js renderer (step 2), director and LLM providers (step 3), speech input (step 4), live loop and proxy (step 5), Tauri packaging (step 6).
+Step 1 (deck model):
+- Deck state and limits (`Exlide/src/core/deck.ts`): at most 5 bullets per slide, bullet and title length caps, 40 slides.
+- Operation types, defined once (`Exlide/src/core/operations.ts`): `add_slide`, `update_bullets`, `set_title`, `remove_slide`, `reorder`, `no_change`.
+- Validator for untrusted model output (`Exlide/src/core/schema.ts`). It parses JSON (bare array, `{"operations": [...]}`, code fences, surrounding chatter), checks each op's shape and slide references in sequence, and drops invalid ops with a reason.
+- Pure, immutable reducer (`Exlide/src/core/reducer.ts`). Edits that change nothing return the same object, so the renderer can skip them without flicker.
+
+Still missing: reveal.js renderer (step 2), director and LLM providers (step 3), speech input (step 4), live loop and proxy (step 5), Tauri packaging (step 6).
 
 ## Run
 
@@ -58,6 +64,8 @@ Replay mode (`npm run replay`) arrives with the director in step 3.
 ## Modify
 
 - Provider interfaces: `Exlide/src/core/providers.ts`.
+- Add or change an operation: the type in `Exlide/src/core/operations.ts`, then its validation in `schema.ts` and its effect in `reducer.ts`. TypeScript's exhaustive switches point to every place that needs updating.
+- Slide limits (bullets, lengths): `LIMITS` in `Exlide/src/core/deck.ts`.
 - Which env vars the browser can see: `PUBLIC_ENV` in `Exlide/vite.config.ts`. Never add a key there.
 - App config defaults: `Exlide/src/config.ts`.
 - UI look: `Exlide/src/ui/styles.css`.

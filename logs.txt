@@ -12,3 +12,11 @@
 [2026-10-14 18:37] [step 0] CREATED src/config.ts, index.html, src/main.ts (UI shell: mic, steer input, stage), .env.example, .gitignore, tests/config.test.ts
 [2026-10-14 18:37] [step 0] VERIFIED typecheck OK (3 configs), 3 tests pass, vite build OK.
 [2026-10-14 18:38] [step 0] CREATED README.md (repo root).
+[2026-10-14 18:38] [step 0] GIT author set to cezar <cezar@bailescu.ro> (repo-local, per user); initial commit amended to that author (was unpushed).
+[2026-10-14 18:39] [step 0] GIT remote origin = https://github.com/Cezar-22/Exlide (user-provided, was empty); pushed main. Plan: push after each step commit.
+[2026-10-14 18:40] [step 1] CREATED src/core/deck.ts (immutable DeckState, LIMITS: 5 bullets, 120-char bullets, 80-char titles, 40 slides), operations.ts (6 op types + touchedSlides), reducer.ts, schema.ts
+[2026-10-14 18:40] [step 1] DECISION reducer mints slide ids (s1, s2, ...; never reused) so the model never invents ids; ops refer to slides with a "slide" field.
+[2026-10-14 18:40] [step 1] DECISION update_bullets/set_title also show the edited slide (speaker went back to that topic); add_slide inserts after the current slide.
+[2026-10-14 18:40] [step 1] DECISION validator drops add_slide with a duplicate title (weak models re-add slides); accepts array, {operations:[...]}, single op, fenced or chatter-wrapped JSON. Ops are validated in sequence against the simulated deck.
+[2026-10-14 18:40] [step 1] DECISION no-op edits return the same deck object (no version bump), so the renderer can skip them and avoid flicker.
+[2026-10-14 18:40] [step 1] VERIFIED typecheck OK, 26 tests pass (reducer 9, schema 14, config 3).
