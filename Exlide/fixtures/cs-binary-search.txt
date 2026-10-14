@@ -1,0 +1,20 @@
+# Lesson: binary search and big O, intro computer science, about 3 minutes.
+[00:00] Okay, today's topic is searching, and specifically binary search.
+[00:06] First, linear search. You check every element one by one until you find the target.
+[00:14] In the worst case you look at all n elements, so we say it's big oh of n.
+[00:21] Binary search is much faster, but it only works on a sorted list.
+[00:28] You look at the middle element. If the target is smaller, you throw away the right half. If it's bigger, the left half.
+[00:38] Then you repeat on the half that's left, until you find it or nothing is left.
+[00:45] Each step halves the list, so it takes about log base two of n steps. Big oh of log n.
+[00:54] To give you a feeling: a million elements needs only about twenty steps.
+[01:02] Linear search could need a million.
+[01:06] Um, okay, let me write the code.
+[01:10] We keep two indexes, low and high. While low is less than or equal to high, we compute mid as low plus high divided by two.
+[01:21] If the element at mid equals the target, return mid.
+[01:26] If it's less than the target, low becomes mid plus one. Otherwise high becomes mid minus one.
+[01:34] If the loop ends, return minus one, meaning not found.
+[01:40] A classic bug is an off by one error, like writing low less than high instead of less than or equal.
+[01:49] >> add a slide comparing linear and binary search
+[01:52] So linear search works on any list and is O of n. Binary search needs sorting but is O of log n.
+[02:01] If you search many times, sorting once first, which is n log n, pays off quickly.
+[02:09] For the lab, implement both and count the comparisons on a list of ten thousand numbers.

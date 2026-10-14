@@ -5,6 +5,7 @@ import { defineConfig, loadEnv, type Plugin } from 'vite';
 // particular) stays on the server side. Never add a *_KEY name here.
 const PUBLIC_ENV = [
   'STT_PROVIDER',
+  'STT_LANG',
   'LLM_PROVIDER',
   'LLM_MODEL',
   'OLLAMA_URL',

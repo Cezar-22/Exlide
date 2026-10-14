@@ -6,6 +6,8 @@ export type LlmProviderName = 'ollama' | 'proxy' | 'mock';
 
 export interface AppConfig {
   sttProvider: SttProviderName;
+  /** BCP-47 speech language, e.g. en-US, en-GB, ro-RO. */
+  sttLang: string;
   llmProvider: LlmProviderName;
   llmModel: string;
   ollamaUrl: string;
@@ -29,6 +31,7 @@ function positiveInt(value: string | undefined, fallback: number): number {
 export function readConfig(env: Readonly<Record<string, string>>): AppConfig {
   return {
     sttProvider: pick(env['STT_PROVIDER'], STT_NAMES, 'webspeech'),
+    sttLang: env['STT_LANG'] || 'en-US',
     llmProvider: pick(env['LLM_PROVIDER'], LLM_NAMES, 'ollama'),
     llmModel: env['LLM_MODEL'] ?? '',
     ollamaUrl: env['OLLAMA_URL'] ?? 'http://127.0.0.1:11434',

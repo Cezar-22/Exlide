@@ -1,4 +1,5 @@
 import { createLlmProvider } from './adapters/llm/index.ts';
+import { createSttProvider } from './adapters/stt/index.ts';
 import { readConfig } from './config.ts';
 import { emptyDeck, type DeckState } from './core/deck.ts';
 import { applyOperations } from './core/reducer.ts';
@@ -6,6 +7,7 @@ import { validateOperations } from './core/schema.ts';
 import { createConsoleDebugLogger } from './ui/debug-console.ts';
 import { DeckView } from './ui/deck-view.ts';
 import { DEMO_OPERATIONS } from './ui/demo.ts';
+import { startMicLevel, type MicLevel } from './ui/mic-level.ts';
 import { mountPastePanel } from './ui/paste-panel.ts';
 import { Session } from './ui/session.ts';
 import './ui/styles.css';
@@ -76,10 +78,72 @@ function startSession(): Session | null {
   }
 }
 
+/** Live mode: the mic button starts speech recognition and the director. */
+function mountMic(session: Session): void {
+  const mic = requireElement('.mic', HTMLButtonElement);
+  const stt = createSttProvider(config);
+  let level: MicLevel | null = null;
+  let on = false;
+
+  const setLevel = (value: number) => mic.style.setProperty('--level', value.toFixed(3));
+  const setOn = (value: boolean) => {
+    on = value;
+    mic.setAttribute('aria-pressed', String(value));
+    mic.textContent = value ? 'Stop' : 'Mic';
+    if (!value) {
+      level?.stop();
+      level = null;
+      session.stop();
+    }
+  };
+
+  stt.onSegment((segment) => {
+    session.addSegment(segment);
+    setStatus(segment.text); // live caption, so the speaker sees what was heard
+  });
+  stt.onStateChange((state, detail) => {
+    debug.log('stt.state', { state, detail });
+    if (state === 'error') {
+      setStatus(detail ?? 'Speech recognition error');
+      stt.stop();
+      setOn(false);
+    }
+  });
+
+  mic.disabled = false;
+  if (!stt.isSupported()) {
+    mic.disabled = true;
+    setStatus('Speech recognition needs Chrome or Edge.');
+    return;
+  }
+
+  mic.addEventListener('click', async () => {
+    if (on) {
+      stt.stop();
+      setOn(false);
+      setStatus('Mic off');
+      return;
+    }
+    try {
+      level = await startMicLevel(setLevel); // also triggers the permission prompt
+      setStatus(`Listening on: ${level.deviceLabel}`);
+    } catch (error) {
+      setStatus(`Microphone unavailable: ${error instanceof Error ? error.message : String(error)}`);
+      return;
+    }
+    setOn(true);
+    session.start();
+    await stt.start();
+  });
+}
+
 const params = new URLSearchParams(location.search);
 if (params.has('demo')) {
   void playDemo(Number(params.get('demo')) || 2000);
 } else if (params.has('paste')) {
   const session = startSession();
   if (session) mountPastePanel(stage, session, Number(params.get('paste')) || 1);
+} else {
+  const session = startSession();
+  if (session) mountMic(session);
 }

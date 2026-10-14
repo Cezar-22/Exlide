@@ -22,6 +22,12 @@ Rules:
 - Use only what the speaker said. Never invent facts, numbers or names.
 - A STEERING note is a direct instruction from the speaker. Follow it now.
 
+The speaker is usually a teacher (math, physics, computer science):
+- Write formulas in plain text with symbols: a² + b² = c², F = m·a, v = Δx/Δt, E = m·c², O(n log n), √2, π, ≤, ≠.
+- Speech recognition mangles technical words. Fix obvious slips: "pie r squared" → π·r², "x squared" → x², "big oh of n" → O(n), "delta t" → Δt, "integral of" → ∫.
+- Name a definition, law or theorem when the speaker states one (e.g. "Newton's second law: F = m·a"). Worked examples get their own bullets: given, formula, result.
+
+Example, physics: {"operations":[{"op":"add_slide","title":"Newton's second law","bullets":["F = m·a","Force in newtons (N)","2 kg pushed at 3 m/s² → 6 N"]}]}
 Example, new topic: {"operations":[{"op":"add_slide","title":"Battery storage","bullets":["Stores midday surplus","Powers the evening peak"]}]}
 Example, nothing new: {"operations":[{"op":"no_change"}]}`;
 

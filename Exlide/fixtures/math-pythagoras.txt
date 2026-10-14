@@ -1,0 +1,20 @@
+# Lesson: Pythagorean theorem, grade 8 math, about 3 minutes. Speech-recognition slips left in on purpose.
+[00:00] Good morning everyone, today we're looking at right triangles and the Pythagorean theorem.
+[00:07] A right triangle is a triangle with one angle of exactly ninety degrees.
+[00:14] The longest side, opposite the right angle, is called the hypotenuse. The other two are the legs.
+[00:23] So the theorem says that a squared plus b squared equals c squared, where c is the hypotenuse.
+[00:32] Let's do an example. The legs are three and four centimeters.
+[00:38] Three squared is nine, four squared is sixteen, nine plus sixteen is twenty five.
+[00:46] The square root of twenty five is five, so the hypotenuse is five centimeters.
+[00:54] Okay, um, is that clear? Good.
+[01:00] Now, where do we use this in real life? Builders use it to check that corners are square.
+[01:08] They measure three meters on one wall, four on the other, and the diagonal should be five.
+[01:17] It also gives us the distance between two points on a graph.
+[01:24] The distance is the square root of delta x squared plus delta y squared.
+[01:33] For points one comma two and four comma six, delta x is three and delta y is four, so the distance is again five.
+[01:45] >> add a slide with a practice exercise
+[01:48] Here is one for you: the legs are five and twelve, what is the hypotenuse?
+[01:56] Take two minutes and try it. The answer is thirteen, because twenty five plus a hundred forty four is a hundred sixty nine.
+[02:08] Finally, the converse. If a squared plus b squared equals c squared, then the triangle must be a right triangle.
+[02:18] So we can use it to test whether an angle is ninety degrees.
+[02:25] For homework, page forty two, exercises one to eight. See you on Thursday.

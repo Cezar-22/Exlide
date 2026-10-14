@@ -182,3 +182,10 @@ body {
   font: inherit;
   cursor: pointer;
 }
+
+/* input level ring on the mic button while listening */
+.mic {
+  --level: 0;
+  box-shadow: 0 0 0 calc(var(--level) * 10px) rgb(255 90 95 / 0.35);
+  transition: box-shadow 80ms linear;
+}

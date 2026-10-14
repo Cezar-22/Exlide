@@ -51,7 +51,13 @@ Step 3 (director, no audio yet):
 
 Not yet verified against a real model: Ollama is not installed on the dev machine and there is no Groq key yet. Everything is tested with a mock LLM.
 
-Still missing: speech input (step 4), live loop and proxy (step 5), Tauri packaging (step 6).
+Step 4 (speech input, browser):
+- Mic button: open the app with no URL parameters and press **Mic**. `Exlide/src/adapters/stt/webspeech.ts` uses the Web Speech API in continuous mode with interim results, restarts it after pauses, backs off on network errors, and shows clear messages for a denied permission or a missing mic.
+- An input-level ring on the button (`Exlide/src/ui/mic-level.ts`) and "Listening on: <device>" in the status line confirm which mic is live. Recognized words appear there as a live caption.
+- Teaching subjects: the director prompt (`Exlide/src/core/prompts.ts`) knows how to write math, physics and CS formulas (a² + b² = c², F = m·a, O(log n)) and fixes common recognition slips ("pie r squared" → π·r²). There are three lesson fixtures: `math-pythagoras`, `physics-newton`, `cs-binary-search`.
+- Not done yet: running this inside Tauri (needs the Rust toolchain).
+
+Still missing: speech input inside Tauri (step 4), live loop and proxy (step 5), Tauri packaging (step 6).
 
 ## Run
 
@@ -133,6 +139,8 @@ Ruled out: Gemini free tier (Google no longer publishes the limits, reports say 
 
 Setting up Ollama: install from https://ollama.com, run `ollama pull llama3.2:3b`, and keep it running. The browser dev server (localhost) is on Ollama's default CORS allow-list. The Tauri window on Windows (`http://tauri.localhost`) is not, so step 6 handles that.
 
-### Speech-to-text
+### Speech-to-text (researched 2026-10-14)
 
-Chosen in step 4. The planned default is the browser Web Speech API (free, Chrome/Edge).
+**Web Speech API** (`STT_PROVIDER=webspeech`, language `STT_LANG`, default `en-US`; `ro-RO`, `en-GB` etc. work). Free, no key, streaming with interim results, Chrome and Edge only. **Privacy:** Chrome sends the audio to Google's servers and Edge to Microsoft's, so it needs internet. I could not confirm whether either uses that audio for training. An on-device mode (`processLocally`) exists but is still experimental (Edge Canary/Dev). Local Whisper and Deepgram stay as later options.
+
+**Microphones:** the Web Speech API always uses the **OS default input** and cannot pick a device. To use a headset, set it as the default recording device in Windows (Settings → System → Sound → Input) before pressing Mic. Bluetooth headsets (e.g. Sennheiser Momentum/HD 450BT) switch to hands-free mode while the mic is in use: audio gets mono and lower quality, and recognition is usually a bit worse than with a wired or laptop mic.

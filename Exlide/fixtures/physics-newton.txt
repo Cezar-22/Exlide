@@ -1,0 +1,20 @@
+# Lesson: Newton's laws of motion, high-school physics, about 3 minutes.
+[00:00] Alright class, today we start Newton's three laws of motion.
+[00:06] The first law, also called the law of inertia.
+[00:11] An object stays at rest, or keeps moving in a straight line at constant speed, unless a net force acts on it.
+[00:21] That's why you lurch forward in a bus when it brakes suddenly. Your body wants to keep moving.
+[00:30] The second law connects force, mass and acceleration. F equals m times a.
+[00:38] Force is measured in newtons, mass in kilograms, and acceleration in meters per second squared.
+[00:46] Example. A two kilogram cart is pushed with an acceleration of three meters per second squared.
+[00:54] The force is two times three, so six newtons.
+[01:00] If you double the mass but keep the same force, the acceleration is cut in half.
+[01:08] Uh, let me just get the remote. Okay.
+[01:14] The third law. For every action there is an equal and opposite reaction.
+[01:21] When you push on a wall, the wall pushes back on you with the same force.
+[01:28] A rocket pushes gas downwards, and the gas pushes the rocket upwards. That's how it flies in space with nothing to push against.
+[01:39] Important: the action and reaction act on different objects, so they don't cancel out.
+[01:47] >> recap the three laws on one slide
+[01:50] So, to recap: inertia, F equals m a, and action equals reaction.
+[01:57] Next lesson we'll look at friction and how it fits into the second law.
+[02:04] For homework, calculate the force needed to accelerate a fifteen hundred kilogram car at two meters per second squared.
+[02:13] The answer should be three thousand newtons. Check your units.
